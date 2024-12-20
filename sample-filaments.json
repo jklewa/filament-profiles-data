@@ -1,0 +1,114 @@
+[
+  {
+    "title": "3D-Fuel Standard PLA+ Filament for 3D Printing, Made in The USA, 3D Printer Filament with High Quality Resin, Dimensional Accuracy +/- 0.02 mm, 1.75 mm, 1 kg Spool, Midnight Black",
+    "price": 29,
+    "primeOnly": false,
+    "href": "https://www.amazon.com/dp/B01DXWQM6M?tag=3dfil-20&linkCode=ogi&th=1&psc=1&language=en_US",
+    "image": {
+      "url": "https://m.media-amazon.com/images/I/51Vb0-PDIcL._SL75_.jpg",
+      "width": 75,
+      "height": 56
+    },
+    "image_med": {
+      "url": "https://m.media-amazon.com/images/I/51Vb0-PDIcL._SL160_.jpg",
+      "width": 160,
+      "height": 120
+    },
+    "asin": "B01DXWQM6M",
+    "price_date": "2024-12-14T17:30:17.781Z",
+    "listings": [
+      {
+        "price": {
+          "amount": 29,
+          "currency": "USD",
+          "savings": {
+            "amount": 0,
+            "currency": "USD",
+            "percentage": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "title": "3D-Fuel Tough Pro PLA+ Filament for 3D Printing, Made in The USA, 3D Printer Filament with High Quality Resin, Dimensional Accuracy +/- 0.02 mm, 1.75 mm, 1 kg Spool, LulzBot Green",
+    "price": 39,
+    "primeOnly": false,
+    "href": "https://www.amazon.com/dp/B08L9MNR1V?tag=3dfil-20&linkCode=ogi&th=1&psc=1&language=en_US",
+    "image": {
+      "url": "https://m.media-amazon.com/images/I/41sJV7NmvIL._SL75_.jpg",
+      "width": 75,
+      "height": 75
+    },
+    "image_med": {
+      "url": "https://m.media-amazon.com/images/I/41sJV7NmvIL._SL160_.jpg",
+      "width": 160,
+      "height": 160
+    },
+    "asin": "B08L9MNR1V",
+    "price_date": "2024-12-15T01:25:41.918Z",
+    "listings": [
+      {
+        "price": {
+          "amount": 39,
+          "currency": "USD",
+          "savings": {
+            "amount": 0,
+            "currency": "USD",
+            "percentage": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "title": "3Dgenius PLA 3D Printer Filament PLA Filament 1.75mm 1kg/2.2lbs Spool 3D Printing Filament 1.75mm PLA Filament Dimensional Accuracy +/- 0.03mm, Blue PLA Fit Most FDM Printers",
+    "primeOnly": false,
+    "href": "https://www.amazon.com/dp/B0B4DXMDXY?tag=mmspace-20&linkCode=ogi&th=1&psc=1&language=en_US",
+    "image": {
+      "url": "https://m.media-amazon.com/images/I/51EUr82A4dL._SL75_.jpg",
+      "width": 75,
+      "height": 75
+    },
+    "image_med": {
+      "url": "https://m.media-amazon.com/images/I/51EUr82A4dL._SL160_.jpg",
+      "width": 160,
+      "height": 160
+    },
+    "asin": "B0B4DXMDXY",
+    "price_date": "2024-11-01T04:30:05.904Z",
+    "listings": [],
+    "bad": "B0B4DXMDXY"
+  },
+  {
+    "title": "3Dgenius Silk PLA 3D Printer Filament Triple Color Silk PLA Filament 1.75mm 3D Printing Filament Fit Most FDM Printers, 250g Spool(0.55lbs), 3 in 1 Color Rose Red Sky Blue Green",
+    "price": 12.49,
+    "primeOnly": false,
+    "href": "https://www.amazon.com/dp/B0C9DQ6H8Z?tag=3dfil-20&linkCode=ogi&th=1&psc=1&language=en_US",
+    "image": {
+      "url": "https://m.media-amazon.com/images/I/51+-BEOmIVL._SL75_.jpg",
+      "width": 75,
+      "height": 75
+    },
+    "image_med": {
+      "url": "https://m.media-amazon.com/images/I/51+-BEOmIVL._SL160_.jpg",
+      "width": 160,
+      "height": 160
+    },
+    "asin": "B0C9DQ6H8Z",
+    "price_date": "2024-12-17T22:54:07.159Z",
+    "listings": [
+      {
+        "price": {
+          "amount": 12.49,
+          "currency": "USD",
+          "savings": {
+            "amount": 0,
+            "currency": "USD",
+            "percentage": 0
+          }
+        }
+      }
+    ]
+  }
+]
