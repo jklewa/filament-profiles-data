@@ -35,7 +35,7 @@ def load(file_path):
 
 def parse(lines, resource):
     target_ref_id = None
-    fallback_ref_id = None
+    fallback_ref_ids = []
     line_dependencies = {}
     line_contents_by_ref_id = {"undefined": "null"}
     search_text = TARGET_SEARCH_PATTERN % resource
@@ -57,11 +57,10 @@ def parse(lines, resource):
 
         if search_text in ref_contents:
             target_ref_id = re.search(TARGET_ID_PATTERN % resource, ref_contents).group(1)
-            fallback_ref_id = None
-        if not target_ref_id and '{"data":[{' in ref_contents:
-            fallback_ref_id = line_ref
+        if '{"data":[{' in ref_contents:
+            fallback_ref_ids.append(line_ref)
 
-    if target_ref_id is None and fallback_ref_id is None:
+    if target_ref_id is None and not fallback_ref_ids:
         print(f"Error: '{search_text}' not found", file=sys.stderr)
         exit(1)
 
@@ -76,31 +75,36 @@ def parse(lines, resource):
 
         line_contents_by_ref_id[refID] = line_contents
 
+    parsed_data = {}
+
     if target_ref_id is not None:
         target_data = json.loads(line_contents_by_ref_id[target_ref_id])
-        return target_data
+        parsed_data[resource] = target_data
 
-    def find_data_node(node):
+    def find_data_nodes(node) -> dict:
+        nodes = {}
         if isinstance(node, dict):
             if "data" in node:
-                return node["data"]
+                data_type = node.get("dataType", resource)
+                data_type += "s" if data_type[-1] != "s" else ""
+                nodes[data_type] = node["data"]
             for key, value in node.items():
-                result = find_data_node(value)
+                result = find_data_nodes(value)
                 if result:
-                    return result
+                    nodes.update(result)
         elif isinstance(node, list):
             for item in node:
-                result = find_data_node(item)
+                result = find_data_nodes(item)
                 if result:
-                    return result
-        return None
+                    nodes.update(result)
+        return nodes
 
-    fallback_data = line_contents_by_ref_id[fallback_ref_id]
-    target_data = find_data_node(json.loads(fallback_data))
-    if target_data is None:
-        print(f"Error in fallback search", file=sys.stderr)
-        exit(1)
-    return target_data
+    for fallback_ref_id in fallback_ref_ids:
+        fallback_contents = line_contents_by_ref_id[fallback_ref_id]
+        data_nodes = find_data_nodes(json.loads(fallback_contents))
+        parsed_data.update(data_nodes)
+
+    return parsed_data
 
 
 if __name__ == "__main__":
