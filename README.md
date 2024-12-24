@@ -2,8 +2,8 @@
 
 This repository contains a script to fetch/parse data from the [3D Filament Profiles](https://3dfilamentprofiles.com) website.
 
-* Filaments: https://3dfilamentprofiles.com/filaments [ [sample](./sample-filaments.json) / [raw](./sample-filaments-raw.json) ]
-* Brands: https://3dfilamentprofiles.com/brands [ [sample](./sample-brands.json) / [raw](./sample-brands-raw.json) ]
+* Filaments: https://3dfilamentprofiles.com/filaments [ [sample](./sample-filaments.json) / [raw](./sample-filaments-raw.rsc) ]
+* Brands: https://3dfilamentprofiles.com/brands [ [sample](./sample-brands.json) / [raw](./sample-brands-raw.rsc) ]
 * Materials: https://3dfilamentprofiles.com/materials
 * Dryers: https://3dfilamentprofiles.com/dryers
 
@@ -11,7 +11,7 @@ This repository contains a script to fetch/parse data from the [3D Filament Prof
 
 Parse sample files:
 
-`./parser.py --file ./sample-filaments-raw.json --resource filaments > sample-filaments.json`
+`./parser.py --file ./sample-filaments-raw.rsc --resource filaments > sample-filaments.json`
 
 Fetch and parse:
 
@@ -29,9 +29,10 @@ Source:
   --file FILE          path to the file to parse
 
 Parse:
-  --resource RESOURCE  Parse one of: filaments, brands, materials, dryers; defaults to --fetch
+  --resource RESOURCE  Parse one of: filaments, brands, materials, dryers, myfilaments; defaults to --fetch
 ```
 
 ### References
 
-* 3D Filament Profiles Project: https://github.com/MarksMakerSpace/filament-profiles
+* https://3dfilamentprofiles.com | https://github.com/MarksMakerSpace/filament-profiles
+* [RSC Devtools](https://chromewebstore.google.com/detail/rsc-devtools/jcejahepddjnppkhomnidalpnnnemomn) Chrome Extension based on https://github.com/alvarlagerlof/rsc-parser
