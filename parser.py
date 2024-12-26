@@ -106,6 +106,9 @@ def fetch(resource):
         session = requests.session()
     print(f"Fetching {url}...", file=sys.stderr, flush=True)
     r = session.get(url, headers={"rsc": "1"})
+    if "NEXT_REDIRECT;replace;/login" in r.content.decode("utf-8"):
+        print("Error: Bad auth", file=sys.stderr)
+        exit(1)
     print(f"Fetched {url} status {r.status_code}", file=sys.stderr, flush=True)
     if not r.ok:
         print(f"Error: failed to fetch {url} status {r.status_code}", file=sys.stderr)
