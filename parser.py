@@ -1,24 +1,111 @@
 #!/usr/bin/env python3
 import argparse
+import getpass
 import json
+import os
 import re
 import sys
+from typing import List, Tuple
 
 import requests
+from dotenv import load_dotenv, set_key
 
+# Load environment variables
+ENV_FILE = ".env"
+load_dotenv(ENV_FILE)
+
+BASE_URL = "https://3dfilamentprofiles.com"
+RESOURCE_KEY_MAP = {"myfilaments": "filaments"}
 REF_ID_PATTERN = r"[a-z0-9]+"
 REF_USE_PATTERN = r'"\$(%s)"' % REF_ID_PATTERN
 LINE_PATTERN = r"(%s):(.+)$" % REF_ID_PATTERN
 TARGET_SEARCH_PATTERN = '{"%s":'
 TARGET_ID_PATTERN = rf'"%s":\s*"\$({REF_ID_PATTERN})"'
-BASE_URL = "https://3dfilamentprofiles.com"
-RESOURCE_KEY_MAP = {"myfilaments": "filaments"}
+LOGIN_NEXT_ACTION_PATTERN = r'type="submit" name="\$ACTION_ID_([a-z0-9]+)"'
+
+
+def get_auth_session():
+    """Get an authenticated requests.Session."""
+    session = requests.session()
+    cookies = os.getenv("AUTH_COOKIES", "").strip()
+    if len(cookies) == 0:
+        print(
+            f"Error: Missing AUTH_COOKIES, try {sys.argv[0]} --login", file=sys.stderr
+        )
+        exit(1)
+    for cookie in cookies.split(";"):
+        try:
+            name, value = cookie.strip().split("=", 2)
+            session.cookies.set(name, value)
+        except ValueError:
+            print(f"Error: Invalid format for AUTH_COOKIES: {cookie}", file=sys.stderr)
+            exit(1)
+    return session
+
+
+def save_auth(cookies: List[Tuple[str, str]]):
+    """Save authentication cookies to .env file."""
+    set_key(ENV_FILE, "AUTH_COOKIES", "; ".join("=".join(cookie) for cookie in cookies))
+    print("Auth saved to .env", file=sys.stderr)
+
+
+def login():
+    """Login to 3dfilamentprofiles.com and save the token."""
+    email = input("Email: ")
+    password = getpass.getpass("Password: ")
+
+    login_next_action = re.search(
+        LOGIN_NEXT_ACTION_PATTERN, requests.get(f"{BASE_URL}/login").text
+    ).group(1)
+    print("Logging in...", file=sys.stderr)
+    headers = {
+        "accept": "text/x-component",
+        "dnt": "1",
+        "next-action": login_next_action,
+    }
+    form_data = {
+        "1_email": email,
+        "1_password": password,
+        "0": '["$K1"]',
+    }
+    r = requests.post(
+        f"{BASE_URL}/login", data=form_data, headers=headers, allow_redirects=True
+    )
+
+    if "Invalid+login+credentials" in r.headers.get("X-Action-Redirect", ""):
+        print("Error: Invalid login credentials", file=sys.stderr)
+        exit(1)
+
+    # Extract auth cookies
+    auth_cookies = [(c.name, c.value) for c in r.cookies if "auth-token" in c.name]
+
+    # r.status_code is `303 See Other` on successful login
+    if r.status_code >= 400 or not auth_cookies:
+        print(f"Login failed: {r.status_code}", file=sys.stderr)
+        print("Response headers:", file=sys.stderr)
+        for k, v in r.headers.items():
+            print(f"{k}: {v}", file=sys.stderr)
+        print("Response cookies:", file=sys.stderr)
+        for cookie in r.cookies:
+            print(f"{cookie.name}: {cookie.value}", file=sys.stderr)
+        print("\nResponse content:", file=sys.stderr)
+        print(r.text, file=sys.stderr)
+        exit(1)
+
+    save_auth(auth_cookies)
+    print("Login successful!", file=sys.stderr)
 
 
 def fetch(resource):
-    url = f"{BASE_URL}/{resource}"
+    """Fetch data from the API with authentication support for myfilaments."""
+    if resource == "myfilaments":
+        url = f"{BASE_URL}/my/filaments"
+        session = get_auth_session()
+    else:
+        url = f"{BASE_URL}/{resource}"
+        session = requests.session()
     print(f"Fetching {url}...", file=sys.stderr, flush=True)
-    r = requests.get(url, headers={"rsc": "1"})
+    r = session.get(url, headers={"rsc": "1"})
     print(f"Fetched {url} status {r.status_code}", file=sys.stderr, flush=True)
     if not r.ok:
         print(f"Error: failed to fetch {url} status {r.status_code}", file=sys.stderr)
@@ -63,7 +150,7 @@ def parse(lines, resource):
             target_ref_id = re.search(
                 TARGET_ID_PATTERN % resource_key, ref_contents
             ).group(1)
-        if '{"data":[{' in ref_contents:
+        if '{"data":[{' in ref_contents:  # This assumes at least one data entry
             fallback_ref_ids.append(line_ref)
 
     if target_ref_id is None and not fallback_ref_ids:
@@ -131,9 +218,18 @@ def parse(lines, resource):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+
+    # Add login command
+    login_group = parser.add_argument_group("Login")
+    login_group.add_argument(
+        "--login",
+        action="store_true",
+        help="Login to 3dfilamentprofiles.com (only used by 'myfilaments')",
+    )
+
+    # Add fetch/parse commands
     source_group = parser.add_argument_group("Source")
-    resources = ["filaments", "brands", "materials", "dryers"]
-    parsable = resources + ["myfilaments"]
+    resources = ["filaments", "brands", "materials", "dryers", "myfilaments"]
     source_group.add_argument(
         "--fetch",
         type=str,
@@ -148,12 +244,16 @@ if __name__ == "__main__":
     parser_group.add_argument(
         "--resource",
         type=str,
-        choices=parsable,
+        choices=resources,
         metavar="RESOURCE",
         help="Parse one of: %(choices)s; defaults to --fetch",
     )
     args = parser.parse_args()
-    if args.fetch:
+
+    if args.login:
+        login()
+        exit(0)
+    elif args.fetch:
         args.resource = args.fetch
         data_lines = fetch(args.fetch)
         data = parse(data_lines, args.resource)
