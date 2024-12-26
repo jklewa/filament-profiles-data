@@ -21,8 +21,10 @@ Some resources (like `myfilaments`) require authentication:
    ```
    This will prompt for your email and password, then save the authentication token to `.env`
 
-* GitHub OAuth / Manual Authentication
-   See (.env.example)(./.env.example)
+* GitHub OAuth / Manual Authentication:
+    1. Visit https://3dfilamentprofiles.com/my/filaments
+    2. Open the browser's DevTools (F12) > Application > Cookies
+    3. Copy the `*auth-token*` value(s) to `.env` (see [.env.example](./.env.example))
 
 ### Usage
 
