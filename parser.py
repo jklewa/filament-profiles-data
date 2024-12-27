@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+from collections import defaultdict
 from typing import List, Tuple
 
 import requests
@@ -183,22 +184,35 @@ def parse(lines, resource):
         target_data = json.loads(line_contents_by_ref_id[target_ref_id])
         parsed_data[resource_key] = target_data
 
-    def find_data_nodes(node) -> dict:
-        nodes = {}
+    def find_data_nodes(node, flatten=True) -> dict:
+        nodes = defaultdict(list)
         if isinstance(node, dict):
             if "data" in node:
                 data_type = node.get("dataType", resource_key)
                 data_type += "s" if data_type[-1] != "s" else ""
-                nodes[data_type] = node["data"]
+                nodes[data_type].append(node["data"])
             for key, value in node.items():
-                result = find_data_nodes(value)
-                if result:
-                    nodes.update(result)
+                result = find_data_nodes(value, flatten=False)
+                for r, v in result.items():
+                    nodes[r].extend(v)
         elif isinstance(node, list):
             for item in node:
-                result = find_data_nodes(item)
-                if result:
-                    nodes.update(result)
+                result = find_data_nodes(item, flatten=False)
+                for r, v in result.items():
+                    nodes[r].extend(v)
+        if flatten:
+            flattened_nodes = {}
+            for k, v in nodes.items():
+                if len(v) == 1:
+                    flattened_nodes[k] = v[0]
+                else:
+                    # Order by length, descending
+                    v.sort(key=lambda x: len(str(x)), reverse=True)
+                    for i, item in enumerate(v):
+                        new_key = f"{k}.{i+1}" if i > 0 else k
+                        flattened_nodes[f"{k}.{i}"] = item
+            return flattened_nodes
+
         return nodes
 
     for fallback_ref_id in fallback_ref_ids:
