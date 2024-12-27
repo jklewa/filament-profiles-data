@@ -1,13 +1,11 @@
+import argparse
+import json
+import re
+import sys
+from typing import Any, Dict, Optional, Union
+
 import pydantic
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Tag,
-    Discriminator,
-    model_serializer,
-)
-from typing import Dict, Optional, Union, Any
-from typing_extensions import Annotated
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_serializer
 
 
 class Image(BaseModel):
@@ -17,21 +15,23 @@ class Image(BaseModel):
 
 
 class PriceData(BaseModel):
+    price: Union[float, int, None] = None
+    bad: Optional[str] = None
+
     asin: Optional[str] = None
-    href: str
-    image: Image
+    href: Optional[str] = None
+    image: Optional[Image] = None
     image_med: Optional[Image] = None
-    listings: list
+    listings: Optional[list] = None
     manufacturer: Optional[str] = None
     merchant: Optional[str] = None
-    price: Union[float, int]
-    price_date: str
-    primeOnly: bool
-    title: str
+    price_date: Optional[str] = None
+    primeOnly: Optional[bool] = None
+    title: Optional[str] = None
 
     @model_serializer(when_used="json")
     def serialize_json(self) -> Dict[str, Any]:
-        model = dict(sorted(self.model_dump(exclude_none=True).items()))
+        model = dict(sorted(self.model_dump().items()))
         return {
             key: value
             for key, value in model.items()
@@ -39,70 +39,48 @@ class PriceData(BaseModel):
         }
 
 
-class BadPriceData(BaseModel):
-    bad: str
-
-
-class MixedPriceData(PriceData):
-    bad: Optional[str] = None
-    price: Union[float, int, None] = None
-
-
-def get_price_data_discriminator_value(obj):
-    if isinstance(obj, dict):
-        if "title" in obj:
-            if "bad" in obj:
-                return "mixed"
-            return "price"
-        return "bad"
-    elif isinstance(obj, str):
-        return "str"
-    elif obj is None:
-        return "none"
-
-
-class Base(BaseModel):
+class Filament(BaseModel):
     ASIN: Optional[str]
     adapterUrl: Optional[str]
-    bed_temp_max: Optional[int]
-    bed_temp_min: Optional[int]
+    bed_temp_max: Optional[int] = None
+    bed_temp_min: Optional[int] = None
     brand_id: str
     brand_name: str
     color: str
-    created_at: str
-    created_by: str
-    deleted: Optional[str]
-    fan_speed_max: Optional[int]
-    fan_speed_min: Optional[int]
-    flow_ratio: Union[float, int, None]
-    id: int
-    image: Optional[str]
-    kValue: Union[float, int, None]
+    created_at: str = Field(
+        validation_alias=AliasChoices("created_at", "filament_created_at")
+    )
+    created_by: Optional[str] = None
+    deleted: Optional[str] = None
+    fan_speed_max: Optional[int] = None
+    fan_speed_min: Optional[int] = None
+    flow_ratio: Union[float, int, None] = None
+    id: int = Field(validation_alias=AliasChoices("id", "filament_id"))
+    image: Optional[str] = None
+    kValue: Union[float, int, None] = None
     material: str
     material_id: str
     material_type: str
     material_type_id: str
-    max_volumetric_speed: Union[float, int, None]
-    priceData: Annotated[
-        Union[
-            Annotated[PriceData, Tag("price")],
-            Annotated[BadPriceData, Tag("bad")],
-            Annotated[MixedPriceData, Tag("mixed")],
-            Annotated[str, Tag("str")],
-            Annotated[None, Tag("none")],
-        ],
-        Discriminator(get_price_data_discriminator_value),
-    ]
-    purchaseLink: Optional[str]
+    max_volumetric_speed: Union[float, int, None] = None
+    priceData: Union[PriceData, str, None] = Field(
+        None, validation_alias=AliasChoices("priceData", "price_data")
+    )
+    purchaseLink: Optional[str] = None
     rgb: Optional[str]
-    softening_temp: Union[float, int, None]
-    spoolWeight: Union[float, int, None]
-    td_value: Union[float, int, None]
-    temp_max: Optional[int]
-    temp_min: Optional[int]
-    total_td_votes: Optional[int]
-    updated_at: str
-    updated_by: str
+    softening_temp: Union[float, int, None] = None
+    spool_count: Optional[int] = None
+    spoolWeight: Union[float, int, None] = Field(
+        None, validation_alias=AliasChoices("spoolWeight", "empty_spool_weight")
+    )
+    td_value: Union[float, int, None] = None
+    temp_max: Optional[int] = None
+    temp_min: Optional[int] = None
+    total_td_votes: Optional[int] = None
+    updated_at: str = Field(
+        validation_alias=AliasChoices("updated_at", "filament_updated_at")
+    )
+    updated_by: Optional[str] = None
 
     model_config = ConfigDict(strict=True)
 
@@ -185,19 +163,32 @@ class Base(BaseModel):
         return bambu_lab_filament_json
 
 
-if __name__ == "__main__":
+def slugify(s: str) -> str:
+    return re.sub(r"\W+", "-", s).strip("-").lower()
+
+
+def remove_none_values(d):
+    if isinstance(d, dict):
+        return {k: remove_none_values(v) for k, v in d.items() if v is not None}
+    if isinstance(d, list):
+        return [remove_none_values(i) for i in d]
+    return d
+
+
+def test_models():
     # Test models with larger dataset
     with open("data/filaments.json", "r") as f:
-        import json
-
         filament_data = json.load(f)
         for filament in filament_data["filaments"]:
             try:
-                base = Base.model_validate(filament)
+                base = Filament.model_validate(filament)
                 raw_json = json.dumps(
-                    filament, separators=(",", ":"), ensure_ascii=False, sort_keys=True
+                    remove_none_values(filament),
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                    sort_keys=True,
                 )
-                model_json = base.model_dump_json()
+                model_json = base.model_dump_json(exclude_none=True)
                 if raw_json != model_json:
                     print("Mismatch")
                     print(raw_json)
@@ -208,8 +199,9 @@ if __name__ == "__main__":
                 print(filament)
                 break
 
-    # Test model example
-    base_example = """
+
+# Test model example
+_base_example = """
     {
       "id": 1802,
       "created_at": "2024-12-19T15:57:04.962+00:00",
@@ -276,5 +268,35 @@ if __name__ == "__main__":
     }
     """
 
-    base = Base.model_validate_json(base_example)
-    print(json.dumps(base.to_bambu_lab_filament_json(), indent=2))
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "file", nargs="?", type=argparse.FileType("r"), help="path to a filaments.json"
+    )
+    parser.add_argument(
+        "--test", action="store_true", help="Test models with data/filaments.json"
+    )
+    args = parser.parse_args()
+
+    if args.test:
+        test_models()
+        exit(0)
+
+    if args.file is None:
+        print("No file provided. Using example data", file=sys.stderr)
+        filaments = [json.loads(_base_example)]
+    else:
+        filaments = json.load(args.file)["filaments"]
+    results = {}
+    for filament in filaments:
+        try:
+            f = Filament.model_validate(filament)
+            filename = f"{f.brand_id}-{f.material_id}-{f.material_type_id}-{slugify(f.color)}.json"
+            results[filename] = f.to_bambu_lab_filament_json()
+        except pydantic.ValidationError as e:
+            print(e, file=sys.stderr)
+            print(filament, file=sys.stderr)
+            exit(1)
+    print(json.dumps(results, indent=2))
