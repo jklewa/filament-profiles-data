@@ -210,7 +210,7 @@ def parse(lines, resource):
                     v.sort(key=lambda x: len(str(x)), reverse=True)
                     for i, item in enumerate(v):
                         new_key = f"{k}.{i+1}" if i > 0 else k
-                        flattened_nodes[f"{k}.{i}"] = item
+                        flattened_nodes[new_key] = item
             return flattened_nodes
 
         return nodes
