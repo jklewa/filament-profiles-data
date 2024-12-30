@@ -50,22 +50,22 @@ Structure: `{ [filename]: { [filament data] } }`
       "123-3D"
     ],
     "nozzle_temperature_range_high": [
-      235
+      "235"
     ],
     "nozzle_temperature_range_low": [
-      195
+      "195"
     ],
     "hot_plate_temp": [
-      "75"
+      "65"
     ],
     "hot_plate_temp_initial_layer": [
-      "75"
+      "65"
     ],
     "filament_flow_ratio": [
       "0.98"
     ],
     "filament_max_volumetric_speed": [
-      12
+      "12"
     ],
     "filament_cost": [
       "29.00"
