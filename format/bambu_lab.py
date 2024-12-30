@@ -351,4 +351,6 @@ if __name__ == "__main__":
             print(e, file=sys.stderr)
             print(filament, file=sys.stderr)
             exit(1)
+    # sort filename keys
+    results = dict(sorted(results.items()))
     print(json.dumps(results, indent=2))
