@@ -3,6 +3,7 @@ import argparse
 import json
 import re
 import sys
+from math import floor
 from typing import Any, Dict, Optional, Union
 
 import pydantic
@@ -109,9 +110,9 @@ class Filament(BaseModel):
                     }
                 )
         if self.bed_temp_min is not None or self.bed_temp_max is not None:
-            best_temp = (
-                self.bed_temp_max or self.bed_temp_min
-            )  # todo: better logic to determine best temp from range
+            # todo: better logic to determine best temp from range
+            temps = list(filter(None, [self.bed_temp_min, self.bed_temp_max]))
+            best_temp: int = sum(temps) // len(temps)
             bambu_lab_filament_json.update(
                 {
                     "hot_plate_temp": [f"{best_temp}"],
@@ -138,13 +139,13 @@ class Filament(BaseModel):
         if self.flow_ratio is not None:
             bambu_lab_filament_json.update(
                 {
-                    "filament_flow_ratio": [f"{self.flow_ratio:.2f}"],
+                    "filament_flow_ratio": [f"{self.flow_ratio:.2f}".rstrip("0").rstrip(".")],
                 }
             )
         if self.max_volumetric_speed is not None:
             bambu_lab_filament_json.update(
                 {
-                    "filament_max_volumetric_speed": [f"{self.max_volumetric_speed}"],
+                    "filament_max_volumetric_speed": [f"{self.max_volumetric_speed:.2f}".rstrip("0").rstrip(".")],
                 }
             )
         if getattr(self.priceData, "price", None):
@@ -331,6 +332,10 @@ if __name__ == "__main__":
         my_filaments = None
     results = {}
     for filament in filaments:
+        if filament.get("filament_id", ""):
+            # detected myfilament format in "filaments.json" file
+            print(f'Error: Cannot load "myfilaments.json" without "filaments.json"! Try: {sys.argv[0]} path/to/filaments.json {args.file.name}', file=sys.stderr)
+            exit(1)
         validation_class = Filament
         if my_filaments:
             if filament["id"] not in my_filaments:
@@ -339,7 +344,7 @@ if __name__ == "__main__":
             extra = my_filaments[filament["id"]]
             filament.update(extra)
         try:
-            f: MyFilament = validation_class.model_validate(filament)
+            f: Filament = validation_class.model_validate(filament)
             filename = slugify(f"{f.brand_id}-{f.material_id}-{f.material_type_id}") + ".json"
             results[filename] = f.model_dump(mode="json") if args.raw else f.to_bambu_lab_filament_format()
         except pydantic.ValidationError as e:
