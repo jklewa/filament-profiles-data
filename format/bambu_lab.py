@@ -82,9 +82,9 @@ class Filament(BaseModel):
     )
     updated_by: Optional[str] = None
 
-    model_config = ConfigDict(strict=True)
+    model_config = ConfigDict(strict=True, extra="ignore")
 
-    def to_bambu_lab_filament_json(self):
+    def to_bambu_lab_filament_format(self):
         bambu_lab_filament_json = {
             "type": "filament",
             "name": " ".join(
@@ -161,6 +161,35 @@ class Filament(BaseModel):
         # td_value: Union[float, int, None]
         # total_td_votes: Optional[int]
         return bambu_lab_filament_json
+
+
+class MyFilament(Filament):
+    # Renamed fields
+    empty_spool_weight: Union[float, int, None] = Field(
+        None, alias="spoolWeight", validation_alias=AliasChoices("spoolWeight", "empty_spool_weight")
+    )
+    spoolWeight: Union[float, int, None] = Field(exclude=True)
+    filament_created_at: str = Field(
+        alias="created_at", validation_alias=AliasChoices("created_at", "filament_created_at")
+    )
+    created_at: str = Field(exclude=True)
+    filament_id: int = Field(
+        alias="id", validation_alias=AliasChoices("id", "filament_id")
+    )
+    id: int = Field(exclude=True)
+    filament_updated_at: str = Field(
+        alias="updated_at", validation_alias=AliasChoices("updated_at", "filament_updated_at")
+    )
+    updated_at: str = Field(exclude=True)
+    price_data: Union[PriceData, str, None] = Field(
+        None, alias="priceData", validation_alias=AliasChoices("priceData", "price_data")
+    )
+    priceData: Union[PriceData, str, None] = Field(exclude=True)
+
+    # Additional fields
+    last_updated: str
+    total_remaining_grams: Union[float, int, None]
+    user_id: str
 
 
 def slugify(s: str) -> str:
@@ -276,7 +305,13 @@ if __name__ == "__main__":
         "file", nargs="?", type=argparse.FileType("r"), help="path to a filaments.json"
     )
     parser.add_argument(
+        "myfile", nargs="?", type=argparse.FileType("r"), help="path to a myfilaments.json"
+    )
+    parser.add_argument(
         "--test", action="store_true", help="Test models with data/filaments.json"
+    )
+    parser.add_argument(
+        "--raw", action="store_true", help="Output raw json instead of bambu_lab format"
     )
     args = parser.parse_args()
 
@@ -284,17 +319,28 @@ if __name__ == "__main__":
         test_models()
         exit(0)
 
-    if args.file is None:
+    if args.file is None and args.myfile is None:
         print("No file provided. Using example data", file=sys.stderr)
         filaments = [json.loads(_base_example)]
     else:
         filaments = json.load(args.file)["filaments"]
+    if args.myfile is not None:
+        my_filaments = {filament["filament_id"]: filament for filament in json.load(args.myfile)["filaments"]}
+    else:
+        my_filaments = None
     results = {}
     for filament in filaments:
+        validation_class = Filament
+        if my_filaments:
+            if filament["id"] not in my_filaments:
+                continue
+            validation_class = MyFilament
+            extra = my_filaments[filament["id"]]
+            filament.update(extra)
         try:
-            f = Filament.model_validate(filament)
-            filename = f"{f.brand_id}-{f.material_id}-{f.material_type_id}-{slugify(f.color)}.json"
-            results[filename] = f.to_bambu_lab_filament_json()
+            f: MyFilament = validation_class.model_validate(filament)
+            filename = slugify(f"{f.brand_id}-{f.material_id}-{f.material_type_id}") + ".json"
+            results[filename] = f.model_dump(mode="json") if args.raw else f.to_bambu_lab_filament_format()
         except pydantic.ValidationError as e:
             print(e, file=sys.stderr)
             print(filament, file=sys.stderr)
