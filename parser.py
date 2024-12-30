@@ -25,9 +25,16 @@ TARGET_ID_PATTERN = rf'"%s":\s*"\$({REF_ID_PATTERN})"'
 LOGIN_NEXT_ACTION_PATTERN = r'type="submit" name="\$ACTION_ID_([a-z0-9]+)"'
 
 
+def new_session():
+    """Get a new requests.Session."""
+    s = requests.sessions.Session()
+    s.headers.update({"User-Agent": "Mozilla/5.0"})
+    return s
+
+
 def get_auth_session():
     """Get an authenticated requests.Session."""
-    session = requests.session()
+    session = new_session()
     cookies = os.getenv("AUTH_COOKIES", "").strip()
     if len(cookies) == 0:
         print(
@@ -104,7 +111,7 @@ def fetch(resource):
         session = get_auth_session()
     else:
         url = f"{BASE_URL}/{resource}"
-        session = requests.session()
+        session = new_session()
     print(f"Fetching {url}...", file=sys.stderr, flush=True)
     r = session.get(url, headers={"rsc": "1"})
     if "NEXT_REDIRECT;replace;/login" in r.content.decode("utf-8"):
