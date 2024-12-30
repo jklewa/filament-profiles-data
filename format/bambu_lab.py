@@ -99,13 +99,13 @@ class Filament(BaseModel):
             if self.temp_max is not None:
                 bambu_lab_filament_json.update(
                     {
-                        "nozzle_temperature_range_high": [self.temp_max],
+                        "nozzle_temperature_range_high": [f"{self.temp_max}"],
                     }
                 )
             if self.temp_min is not None:
                 bambu_lab_filament_json.update(
                     {
-                        "nozzle_temperature_range_low": [self.temp_min],
+                        "nozzle_temperature_range_low": [f"{self.temp_min}"],
                     }
                 )
         if self.bed_temp_min is not None or self.bed_temp_max is not None:
@@ -144,7 +144,7 @@ class Filament(BaseModel):
         if self.max_volumetric_speed is not None:
             bambu_lab_filament_json.update(
                 {
-                    "filament_max_volumetric_speed": [self.max_volumetric_speed],
+                    "filament_max_volumetric_speed": [f"{self.max_volumetric_speed}"],
                 }
             )
         if getattr(self.priceData, "price", None):
