@@ -41,13 +41,17 @@ Structure: `{ [filename]: { [filament data] } }`
 
 ```json
 {
-  "123-3d-pla-basic.json": {
-    "type": "filament",
+  "123-3d-pla-basic-filament.json": {
     "name": "123-3D PLA Basic",
-    "inherits": "fdm_filament_pla",
-    "from": "system",
+    "filament_settings_id": [],
+    "inherits": "",
+    "from": "",
     "filament_vendor": [
       "123-3D"
+    ],
+    "version": "1.10.1.50",
+    "default_filament_colour": [
+      "#000000"
     ],
     "nozzle_temperature_range_high": [
       "235"
@@ -61,6 +65,12 @@ Structure: `{ [filename]: { [filament data] } }`
     "hot_plate_temp_initial_layer": [
       "65"
     ],
+    "fan_max_speed": [
+      "100"
+    ],
+    "fan_min_speed": [
+      "90"
+    ],
     "filament_flow_ratio": [
       "0.98"
     ],
@@ -68,7 +78,7 @@ Structure: `{ [filename]: { [filament data] } }`
       "12"
     ],
     "filament_cost": [
-      "29.00"
+      "29"
     ]
   }
 }

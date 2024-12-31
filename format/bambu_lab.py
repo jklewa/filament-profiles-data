@@ -88,14 +88,21 @@ class Filament(BaseModel):
 
     def to_bambu_lab_filament_format(self):
         bambu_lab_filament_json = {
-            "type": "filament",
             "name": " ".join(
                 filter(None, [self.brand_name, self.material, self.material_type])
             ),
-            "inherits": f"fdm_filament_{self.material_id}",
-            "from": "system",
+            "filament_settings_id": [], # TODO: what should this be?
+            "inherits": "", # TODO: what should this be? f"fdm_filament_{self.material_id}",
+            "from": "",  # TODO: what should this be? "User",
             "filament_vendor": [self.brand_name],
+            "version": "1.10.1.50",
         }
+        if self.rgb is not None:
+            bambu_lab_filament_json.update(
+                {
+                    "default_filament_colour": [self.rgb],
+                }
+            )
         if self.temp_max is not None or self.temp_min is not None:
             if self.temp_max is not None:
                 bambu_lab_filament_json.update(
@@ -151,12 +158,11 @@ class Filament(BaseModel):
         if getattr(self.priceData, "price", None):
             bambu_lab_filament_json.update(
                 {
-                    "filament_cost": [f"{self.priceData.price:.2f}"],
+                    "filament_cost": [f"{self.priceData.price:.2f}".rstrip("0").rstrip(".")],
                 }
             )
         # Unmapped fields:
         # color: str
-        # rgb: Optional[str]
         # kValue: Union[float, int, None]
         # softening_temp: Union[float, int, None]
         # spoolWeight: Union[float, int, None]
@@ -278,9 +284,9 @@ _base_example = """
       "flow_ratio": 0.98,
       "temp_min": 195,
       "temp_max": 235,
-      "fan_speed_min": null,
-      "fan_speed_max": null,
-      "softening_temp": null,
+      "fan_speed_min": 90,
+      "fan_speed_max": 100,
+      "softening_temp": 190,
       "max_volumetric_speed": 12,
       "bed_temp_min": 55,
       "bed_temp_max": 75,
@@ -345,7 +351,7 @@ if __name__ == "__main__":
             filament.update(extra)
         try:
             f: Filament = validation_class.model_validate(filament)
-            filename = slugify(f"{f.brand_id}-{f.material_id}-{f.material_type_id}") + ".json"
+            filename = slugify(f"{f.brand_id}-{f.material_id}-{f.material_type_id}") + "-filament.json"
             results[filename] = f.model_dump(mode="json") if args.raw else f.to_bambu_lab_filament_format()
         except pydantic.ValidationError as e:
             print(e, file=sys.stderr)
