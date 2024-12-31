@@ -37,7 +37,16 @@ python3 format/bambu_lab.py data/filaments.json
 
 ### Sample Data
 
-Structure: `{ [filename]: { [filament data] } }`
+Output Structure: `{ [filename]: { [filament data] } }`
+
+Filament Data:
+- `name`: str Filament name
+- `filament_settings_id`: list[str] Filament settings ID
+- `inherits`: str Inherited filament settings ID
+- `from`: str "system" or "User"
+- `filament_vendor`: list[str] Filament vendor
+- `version`: str Version of Bambu Studio
+- ... various optional config values
 
 ```json
 {
@@ -65,6 +74,9 @@ Structure: `{ [filename]: { [filament data] } }`
     "hot_plate_temp_initial_layer": [
       "65"
     ],
+    "temperature_vitrification": [
+      "190"
+    ],
     "fan_max_speed": [
       "100"
     ],
@@ -79,6 +91,9 @@ Structure: `{ [filename]: { [filament data] } }`
     ],
     "filament_cost": [
       "29"
+    ],
+    "filament_retraction_minimum_travel": [
+      "2.5"
     ]
   }
 }

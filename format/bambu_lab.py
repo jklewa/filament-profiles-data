@@ -130,6 +130,12 @@ class Filament(BaseModel):
                     # "supertack_plate_temp_initial_layer": [f"{best_temp}"],
                 }
             )
+        if self.softening_temp is not None:
+            bambu_lab_filament_json.update(
+                {
+                    "temperature_vitrification": [f"{self.softening_temp:.2f}".rstrip("0").rstrip(".")],
+                }
+            )
         if self.fan_speed_max is not None or self.fan_speed_min is not None:
             if self.fan_speed_max is not None:
                 bambu_lab_filament_json.update(
@@ -161,13 +167,16 @@ class Filament(BaseModel):
                     "filament_cost": [f"{self.priceData.price:.2f}".rstrip("0").rstrip(".")],
                 }
             )
+        if self.td_value not in (None, 0) and self.total_td_votes not in (None, 0):
+            bambu_lab_filament_json.update(
+                {
+                    "filament_retraction_minimum_travel": [f"{self.td_value:.2f}".rstrip("0").rstrip(".")],
+                }
+            )
         # Unmapped fields:
         # color: str
         # kValue: Union[float, int, None]
-        # softening_temp: Union[float, int, None]
         # spoolWeight: Union[float, int, None]
-        # td_value: Union[float, int, None]
-        # total_td_votes: Optional[int]
         return bambu_lab_filament_json
 
 
@@ -300,8 +309,8 @@ _base_example = """
       "brand_name": "123-3D",
       "material": "PLA",
       "material_type": "Basic",
-      "td_value": 0,
-      "total_td_votes": 0
+      "td_value": 2.5,
+      "total_td_votes": 1
     }
     """
 
