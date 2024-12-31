@@ -59,7 +59,7 @@ Examples:
 # Fetch public filaments
 ./parser.py --fetch filaments > filaments.json
 
-# Fetch authenticated user's filaments (requires AUTH_TOKEN in .env)
+# Fetch authenticated user's filaments (requires AUTH_COOKIES in .env, see.env.example)
 ./parser.py --fetch myfilaments > my-filaments.json
 ```
 
