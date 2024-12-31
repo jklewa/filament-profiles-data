@@ -83,3 +83,19 @@ Structure: `{ [filename]: { [filament data] } }`
   }
 }
 ```
+
+### Import into Bambu Studio
+Split the output into multiple files and import them into Bambu Studio.
+
+```python
+import json
+with open('output.json', 'r') as f:
+    # Data format: { [filename]: { [filament data] } }
+    for k, v in json.load(f).items():
+        with open(k, 'w') as f2:
+            json.dump(v, f2, indent=4)
+```
+
+Configs can be imported using **Bambu Studio > File > Import > Import Configs...**
+
+The import will save the files under `~/Library/Application\ Support/BambuStudio/user/*/filament/` on macOS.
