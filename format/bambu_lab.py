@@ -5,6 +5,7 @@ import re
 import sys
 from math import floor
 from typing import Any, Dict, Optional, Union
+from unittest.mock import ANY
 
 import pydantic
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_serializer
@@ -246,7 +247,43 @@ class Filament(BaseModel):
     model_config = ConfigDict(strict=True, extra="ignore")
 
     def to_bambu_lab_filament_format(self):
-        base_profile = f"Generic {self.material_id.upper()}"
+        base_profiles = [
+            ("pla", ANY, "Generic PLA"),
+            ("pla", "cf", "Generic PLA-CF"),
+            ("pla-plus", ANY, "Generic PLA"),
+            ("pla-plus-cf", ANY, "Generic PLA"),
+            ("petg", ANY, "Generic PETG"),
+            ("petg", "cf", "Generic PETG-CF @BBL X1C"),
+            ("petg-plus", ANY, "Generic PETG"),
+            ("abs", ANY, "Generic ABS"),
+            ("abs-plus", ANY, "Generic ABS"),
+            ("asa", ANY, "Generic ASA"),
+            ("asa-plus", ANY, "Generic ASA"),
+            ("pc", ANY, "Generic PC"),
+            ("tpu", ANY, "Generic TPU"),
+            ("pva", ANY, "Generic PVA"),
+            ("hips", ANY, "Generic HIPS"),
+            ("pctg", ANY, "Generic PCTG @BBL X1C"),
+            ("pa", ANY, "Generic PA"),
+            ("pa6", ANY, "Generic PA"),
+            ("pa12", ANY, "Generic PA"),
+            ("pa612", ANY, "Generic PA"),
+            ("paht", ANY, "Generic PA"),
+            ("pa", "cf", "Generic PA-CF"),
+            ("pe", ANY, "Generic PE"),
+            ("pe", "cf", "Generic PE-CF @BBL X1C"),
+            ("pp", ANY, "Generic PP"),
+            ("pp", "cf", "Generic PP-CF @BBL X1C"),
+            ("ppa", ANY, "Generic PPA"),
+            ("ppa", "cf", "Generic PPA-CF @BBL X1C"),
+            ("pps", ANY, "Generic PPS"),
+            ("pps", "cf", "Generic PPS-CF @BBL X1E"),
+        ]
+        for material_id, material_type_id, base_profile in reversed(base_profiles):
+            if self.material_id == material_id and self.material_type_id == material_type_id:
+                break
+        else:
+            base_profile = f"Generic {self.material_id.upper()}"
         if (base_profile + ".json") not in generic_profiles:
             print(f"Warning: {base_profile} not found in generic profiles", file=sys.stderr)
         bambu_lab_filament_json = {
