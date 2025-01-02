@@ -167,6 +167,11 @@ Generic PLA-CF @BBL P1P.json
 Generic PVA @BBL P1P 0.2 nozzle.json
 Generic PVA @BBL P1P.json
 Generic TPU @BBL P1P.json
+Bambu PET-CF @BBL A1.json
+Bambu PET-CF @BBL X1C.json
+Bambu PET-CF @BBL X1E.json
+Bambu PET-CF @BBL P1P.json
+Bambu PET-CF @base.json
 '''
 
 
@@ -278,6 +283,7 @@ class Filament(BaseModel):
             ("ppa", "cf", "Generic PPA-CF @BBL X1C"),
             ("pps", ANY, "Generic PPS"),
             ("pps", "cf", "Generic PPS-CF @BBL X1E"),
+            ("pet", "cf", "Bambu PET-CF @BBL X1C")
         ]
         for material_id, material_type_id, base_profile in reversed(base_profiles):
             if self.material_id == material_id and self.material_type_id == material_type_id:
@@ -285,7 +291,9 @@ class Filament(BaseModel):
         else:
             base_profile = f"Generic {self.material_id.upper()}"
         if (base_profile + ".json") not in generic_profiles:
-            print(f"Warning: {base_profile} not found in generic profiles", file=sys.stderr)
+            print(f"Warning: Missing '{base_profile}.json' ({self.material} {self.material_type})", file=sys.stderr)
+            base_profile = ""  # fallback to inherits:""
+
         bambu_lab_filament_json = {
             "name": (
                 " ".join(
