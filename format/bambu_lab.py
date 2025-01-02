@@ -9,6 +9,165 @@ from typing import Any, Dict, Optional, Union
 import pydantic
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_serializer
 
+generic_profiles = '''
+Generic ABS @0.2 nozzle.json
+Generic ABS @BBL A1 0.2 nozzle.json
+Generic ABS @BBL A1.json
+Generic ABS @BBL X1E 0.2 nozzle.json
+Generic ABS @BBL X1E.json
+Generic ABS @base.json
+Generic ABS.json
+Generic ASA @0.2 nozzle.json
+Generic ASA @BBL A1 0.2 nozzle.json
+Generic ASA @BBL A1.json
+Generic ASA @BBL X1E 0.2 nozzle.json
+Generic ASA @BBL X1E.json
+Generic ASA @base.json
+Generic ASA.json
+Generic BVOH @BBL A1.json
+Generic BVOH @BBL A1M.json
+Generic BVOH @BBL X1C.json
+Generic BVOH @base.json
+Generic EVA @BBL A1.json
+Generic EVA @BBL A1M.json
+Generic EVA @BBL X1C.json
+Generic EVA @base.json
+Generic HIPS @BBL A1 0.2 nozzle.json
+Generic HIPS @BBL A1.json
+Generic HIPS @BBL A1M 0.2 nozzle.json
+Generic HIPS @BBL A1M.json
+Generic HIPS @BBL X1C 0.2 nozzle.json
+Generic HIPS @BBL X1C.json
+Generic HIPS @base.json
+Generic PA @BBL A1.json
+Generic PA-CF @BBL A1.json
+Generic PA-CF @BBL X1E.json
+Generic PA-CF.json
+Generic PA.json
+Generic PC @0.2 nozzle.json
+Generic PC @BBL A1 0.2 nozzle.json
+Generic PC @BBL A1.json
+Generic PC @BBL P1S 0.2 nozzle.json
+Generic PC @BBL P1S.json
+Generic PC @BBL X1E 0.2 nozzle.json
+Generic PC @BBL X1E.json
+Generic PC @base.json
+Generic PC.json
+Generic PCTG @BBL A1.json
+Generic PCTG @BBL A1M.json
+Generic PCTG @BBL X1C.json
+Generic PCTG @base.json
+Generic PE @BBL A1.json
+Generic PE @BBL A1M.json
+Generic PE @BBL X1C.json
+Generic PE @base.json
+Generic PE-CF @BBL A1.json
+Generic PE-CF @BBL A1M.json
+Generic PE-CF @BBL X1C.json
+Generic PE-CF @base.json
+Generic PETG @0.2 nozzle.json
+Generic PETG @BBL A1 0.2 nozzle.json
+Generic PETG @BBL A1.json
+Generic PETG @BBL A1M 0.2 nozzle.json
+Generic PETG @BBL A1M.json
+Generic PETG @base.json
+Generic PETG HF @BBL A1 0.2 nozzle.json
+Generic PETG HF @BBL A1.json
+Generic PETG HF @BBL A1M 0.2 nozzle.json
+Generic PETG HF @BBL A1M.json
+Generic PETG HF @BBL P1P 0.2 nozzle.json
+Generic PETG HF @BBL P1P.json
+Generic PETG HF @BBL X1C 0.2 nozzle.json
+Generic PETG HF @BBL X1C.json
+Generic PETG HF @base.json
+Generic PETG-CF @BBL A1.json
+Generic PETG-CF @BBL X1C.json
+Generic PETG-CF @base.json
+Generic PETG.json
+Generic PHA @BBL A1.json
+Generic PHA @BBL A1M.json
+Generic PHA @BBL X1C.json
+Generic PHA @base.json
+Generic PLA @0.2 nozzle.json
+Generic PLA @BBL A1 0.2 nozzle.json
+Generic PLA @BBL A1.json
+Generic PLA @BBL A1M 0.2 nozzle.json
+Generic PLA @BBL A1M.json
+Generic PLA @base.json
+Generic PLA High Speed @BBL A1 0.2 nozzle.json
+Generic PLA High Speed @BBL A1.json
+Generic PLA High Speed @BBL A1M 0.2 nozzle.json
+Generic PLA High Speed @BBL A1M.json
+Generic PLA High Speed @BBL P1P 0.2 nozzle.json
+Generic PLA High Speed @BBL P1P.json
+Generic PLA High Speed @BBL X1C 0.2 nozzle.json
+Generic PLA High Speed @BBL X1C.json
+Generic PLA High Speed @base.json
+Generic PLA Silk @BBL A1.json
+Generic PLA Silk @BBL A1M.json
+Generic PLA Silk @base.json
+Generic PLA Silk.json
+Generic PLA-CF @BBL A1.json
+Generic PLA-CF @BBL A1M.json
+Generic PLA-CF @base.json
+Generic PLA-CF.json
+Generic PLA.json
+Generic PP @BBL A1.json
+Generic PP @BBL A1M.json
+Generic PP @BBL X1C.json
+Generic PP @base.json
+Generic PP-CF @BBL A1.json
+Generic PP-CF @BBL X1C.json
+Generic PP-CF @base.json
+Generic PP-GF @BBL A1.json
+Generic PP-GF @BBL X1C.json
+Generic PP-GF @base.json
+Generic PPA-CF @BBL X1C.json
+Generic PPA-CF @BBL X1E.json
+Generic PPA-CF @base.json
+Generic PPA-GF @BBL X1C.json
+Generic PPA-GF @BBL X1E.json
+Generic PPA-GF @base.json
+Generic PPS @BBL X1E.json
+Generic PPS @base.json
+Generic PPS-CF @BBL X1E.json
+Generic PPS-CF @base.json
+Generic PVA @0.2 nozzle.json
+Generic PVA @BBL A1 0.2 nozzle.json
+Generic PVA @BBL A1.json
+Generic PVA @BBL A1M 0.2 nozzle.json
+Generic PVA @BBL A1M.json
+Generic PVA @base.json
+Generic PVA.json
+Generic TPU @BBL A1.json
+Generic TPU @BBL A1M.json
+Generic TPU for AMS @BBL A1.json
+Generic TPU for AMS @BBL A1M.json
+Generic TPU for AMS @BBL P1P.json
+Generic TPU for AMS @BBL X1C.json
+Generic TPU for AMS @base.json
+Generic TPU.json
+Generic ABS @BBL P1P 0.2 nozzle.json
+Generic ABS @BBL P1P.json
+Generic ASA @BBL P1P 0.2 nozzle.json
+Generic ASA @BBL P1P.json
+Generic PA @BBL P1P.json
+Generic PA-CF @BBL P1P.json
+Generic PC @BBL P1P 0.2 nozzle.json
+Generic PC @BBL P1P.json
+Generic PETG @BBL P1P 0.2 nozzle.json
+Generic PETG @BBL P1P.json
+Generic PETG-CF @BBL A1M.json
+Generic PETG-CF @BBL P1P.json
+Generic PLA @BBL P1P 0.2 nozzle.json
+Generic PLA @BBL P1P.json
+Generic PLA Silk @BBL P1P.json
+Generic PLA-CF @BBL P1P.json
+Generic PVA @BBL P1P 0.2 nozzle.json
+Generic PVA @BBL P1P.json
+Generic TPU @BBL P1P.json
+'''
+
 
 class Image(BaseModel):
     height: int
@@ -87,13 +246,37 @@ class Filament(BaseModel):
     model_config = ConfigDict(strict=True, extra="ignore")
 
     def to_bambu_lab_filament_format(self):
+        base_profile = f"Generic {self.material_id.upper()}"
+        if (base_profile + ".json") not in generic_profiles:
+            print(f"Warning: {base_profile} not found in generic profiles", file=sys.stderr)
         bambu_lab_filament_json = {
-            "name": " ".join(
-                filter(None, [self.brand_name, self.material, self.material_type])
+            "name": (
+                " ".join(
+                    filter(None, [self.brand_name, self.material, self.material_type])
+                )
             ),
-            "filament_settings_id": [], # TODO: what should this be?
-            "inherits": "", # TODO: what should this be? f"fdm_filament_{self.material_id}",
-            "from": "",  # TODO: what should this be? "User",
+            "filament_type": [
+                self.material  # TODO: verify in valid set (PLA,PTEG,ABS,etc)
+            ],
+            "compatible_printers": [
+                "Bambu Lab X1 Carbon 0.4 nozzle",
+                "Bambu Lab X1 Carbon 0.6 nozzle",
+                "Bambu Lab X1 Carbon 0.8 nozzle",
+                "Bambu Lab P1S 0.4 nozzle",
+                "Bambu Lab P1S 0.6 nozzle",
+                "Bambu Lab P1S 0.8 nozzle",
+                "Bambu Lab X1E 0.4 nozzle",
+                "Bambu Lab X1E 0.6 nozzle",
+                "Bambu Lab X1E 0.8 nozzle",
+            ],
+            "filament_settings_id": [
+                " ".join(
+                    filter(None, [self.brand_name, self.material, self.material_type])
+                )
+            ],
+            "inherits": base_profile,
+            "from": "User",
+            "is_custom_defined": "0",
             "filament_vendor": [self.brand_name],
             "version": "1.10.1.50",
         }
@@ -360,7 +543,7 @@ if __name__ == "__main__":
             filament.update(extra)
         try:
             f: Filament = validation_class.model_validate(filament)
-            filename = slugify(f"{f.brand_id}-{f.material_id}-{f.material_type_id}") + "-filament.json"
+            filename = slugify(f"custom-{f.brand_id}-{f.material_id}-{f.material_type_id}") + "-filament.json"
             results[filename] = f.model_dump(mode="json") if args.raw else f.to_bambu_lab_filament_format()
         except pydantic.ValidationError as e:
             print(e, file=sys.stderr)
