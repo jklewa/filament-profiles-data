@@ -10,7 +10,8 @@ from unittest.mock import ANY
 import pydantic
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_serializer
 
-generic_profiles = '''
+bambu_studio_version = "1.10.1.50"
+profiles_available = '''
 Generic ABS @0.2 nozzle.json
 Generic ABS @BBL A1 0.2 nozzle.json
 Generic ABS @BBL A1.json
@@ -174,6 +175,124 @@ Bambu PET-CF @BBL P1P.json
 Bambu PET-CF @base.json
 '''
 
+# A mapping of material_id and material_type_id to base profile
+# Order is important, generic -> specific, lowest in list wins
+base_profiles = [
+    ("abs", ANY, "Generic ABS"),
+    ("abs-plus", ANY, "Generic ABS"),
+    ("asa", ANY, "Generic ASA"),
+    ("asa-plus", ANY, "Generic ASA"),
+    ("hips", ANY, "Generic HIPS"),
+    ("pa", ANY, "Generic PA"),
+    ("pa", "cf", "Generic PA-CF"),
+    ("pa12", ANY, "Generic PA"),
+    ("pa6", ANY, "Generic PA"),
+    ("pa612", ANY, "Generic PA"),
+    ("paht", ANY, "Generic PA"),
+    ("pa", "ht", "Generic PA"),
+    ("pc", ANY, "Generic PC"),
+    ("pctg", ANY, "Generic PCTG @BBL X1C"),
+    ("pe", ANY, "Generic PE"),
+    ("pe", "cf", "Generic PE-CF @BBL X1C"),
+    # we don't have a pet basic profile
+    ("pet", "cf", "Bambu PET-CF @BBL X1C"),
+    ("petg", ANY, "Generic PETG"),
+    ("petg", "cf", "Generic PETG-CF @BBL X1C"),
+    ("petg-plus", ANY, "Generic PETG"),
+    ("pla", ANY, "Generic PLA"),
+    ("pla", "cf", "Generic PLA-CF"),
+    ("pla-plus", ANY, "Generic PLA"),
+    ("pla-plus-cf", ANY, "Generic PETG-CF @BBL X1C"),
+    ("pp", ANY, "Generic PP"),
+    ("pp", "cf", "Generic PP-CF @BBL X1C"),
+    ("ppa", ANY, "Generic PPA"),
+    ("ppa", "cf", "Generic PPA-CF @BBL X1C"),
+    ("pps", ANY, "Generic PPS"),
+    ("pps", "cf", "Generic PPS-CF @BBL X1E"),
+    ("pva", ANY, "Generic PVA"),
+    ("tpu", ANY, "Generic TPU"),
+]
+
+filament_types_available = (
+    "ABS",
+    "ABS-GF",
+    "ASA",
+    "ASA-Aero",
+    "ASA-CF",
+    "BVOH",
+    "EVA",
+    "HIPS",
+    "PA",
+    "PA-CF",
+    "PA-GF",
+    "PA6-CF",
+    "PC",
+    "PCTG",
+    "PE",
+    "PE-CF",
+    "PET-CF",
+    "PETG",
+    "PETG-CF",
+    "PHA",
+    "PLA",
+    "PLA-AERO",
+    "PLA-CF",
+    "PP",
+    "PP-CF",
+    "PP-GF",
+    "PPA-CF",
+    "PPA-GF",
+    "PPS",
+    "PPS-CF",
+    "PVA",
+    "TPU",
+    "TPU-AMS",
+)
+
+# A mapping of material_id and material_type_id to filament type
+# Order is important, generic -> specific, lowest in list wins
+filament_types = [
+    ("abs", ANY, "ABS"),
+    ("abs-plus", ANY, "ABS"),
+    ("asa", ANY, "ASA"),
+    ("asa", "aero", "ASA-Aero"),
+    ("asa", "cf", "ASA-CF"),
+    ("asa-plus", ANY, "ASA"),
+    ("hips", ANY, "HIPS"),
+    ("pa", ANY, "PA"),
+    ("pa", "cf", "PA-CF"),
+    ("pa12", ANY, "PA"),
+    ("pa6", ANY, "PA"),
+    ("pa6", "cf", "PA6-CF"),
+    ("pa612", ANY, "PA"),
+    ("paht", ANY, "PA"),
+    ("pa", "ht", "PA"),
+    ("pc", ANY, "PC"),
+    ("pctg", ANY, "PCTG"),
+    ("pe", ANY, "PE"),
+    ("pe", "cf", "PE-CF"),
+    # we don't have a pet basic type
+    ("pet", "cf", "PET-CF"),
+    ("petg", ANY, "PETG"),
+    ("petg", "cf", "PETG-CF"),
+    ("petg-plus", ANY, "PETG"),
+    ("pla", ANY, "PLA"),
+    ("pla", "aero", "PLA-AERO"),
+    ("pla", "cf", "PLA-CF"),
+    ("pla-plus", ANY, "PLA"),
+    ("pla-plus-cf", ANY, "PETG-CF"),
+    ("pp", ANY, "PP"),
+    ("pp", "cf", "PP-CF"),
+    ("ppa", ANY, "PPA"),
+    ("ppa", "cf", "PPA-CF"),
+    ("ppa", "gf", "PPA-GF"),
+    ("pps", ANY, "PPS"),
+    ("pps", "cf", "PPS-CF"),
+    ("pva", ANY, "PVA"),
+    ("tpu", ANY, "TPU"),
+    ("tpu", "ams", "TPU-AMS"),
+]
+
 
 class Image(BaseModel):
     height: int
@@ -252,57 +371,31 @@ class Filament(BaseModel):
     model_config = ConfigDict(strict=True, extra="ignore")
 
     def to_bambu_lab_filament_format(self):
-        base_profiles = [
-            ("pla", ANY, "Generic PLA"),
-            ("pla", "cf", "Generic PLA-CF"),
-            ("pla-plus", ANY, "Generic PLA"),
-            ("pla-plus-cf", ANY, "Generic PLA"),
-            ("petg", ANY, "Generic PETG"),
-            ("petg", "cf", "Generic PETG-CF @BBL X1C"),
-            ("petg-plus", ANY, "Generic PETG"),
-            ("abs", ANY, "Generic ABS"),
-            ("abs-plus", ANY, "Generic ABS"),
-            ("asa", ANY, "Generic ASA"),
-            ("asa-plus", ANY, "Generic ASA"),
-            ("pc", ANY, "Generic PC"),
-            ("tpu", ANY, "Generic TPU"),
-            ("pva", ANY, "Generic PVA"),
-            ("hips", ANY, "Generic HIPS"),
-            ("pctg", ANY, "Generic PCTG @BBL X1C"),
-            ("pa", ANY, "Generic PA"),
-            ("pa6", ANY, "Generic PA"),
-            ("pa12", ANY, "Generic PA"),
-            ("pa612", ANY, "Generic PA"),
-            ("paht", ANY, "Generic PA"),
-            ("pa", "cf", "Generic PA-CF"),
-            ("pe", ANY, "Generic PE"),
-            ("pe", "cf", "Generic PE-CF @BBL X1C"),
-            ("pp", ANY, "Generic PP"),
-            ("pp", "cf", "Generic PP-CF @BBL X1C"),
-            ("ppa", ANY, "Generic PPA"),
-            ("ppa", "cf", "Generic PPA-CF @BBL X1C"),
-            ("pps", ANY, "Generic PPS"),
-            ("pps", "cf", "Generic PPS-CF @BBL X1E"),
-            ("pet", "cf", "Bambu PET-CF @BBL X1C")
-        ]
         for material_id, material_type_id, base_profile in reversed(base_profiles):
             if self.material_id == material_id and self.material_type_id == material_type_id:
                 break
         else:
             base_profile = f"Generic {self.material_id.upper()}"
-        if (base_profile + ".json") not in generic_profiles:
-            print(f"Warning: Missing '{base_profile}.json' ({self.material} {self.material_type})", file=sys.stderr)
+        if (base_profile + ".json") not in profiles_available:
+            print(f"Warning: '{base_profile}.json' ({self.material} {self.material_type}) not in profiles", file=sys.stderr)
             base_profile = ""  # fallback to inherits:""
+        profile_name = (
+            " ".join(
+                filter(None, [self.brand_name, self.material, self.material_type])
+            )
+        )
+        for material_id, material_type_id, filament_type in reversed(filament_types):
+            if self.material_id == material_id and self.material_type_id == material_type_id:
+                break
+        else:
+            filament_type = self.material_id.upper()
+        if filament_type not in filament_types_available:
+            print(f"Warning: '{filament_type}' ({self.material} {self.material_type}) not in filament_types", file=sys.stderr)
+            filament_type = ""  # fallback to filament_type:[]
 
         bambu_lab_filament_json = {
-            "name": (
-                " ".join(
-                    filter(None, [self.brand_name, self.material, self.material_type])
-                )
-            ),
-            "filament_type": [
-                self.material  # TODO: verify in valid set (PLA,PTEG,ABS,etc)
-            ],
+            "name": profile_name,
+            "filament_type": [filament_type] if filament_type else [],
             "compatible_printers": [
                 "Bambu Lab X1 Carbon 0.4 nozzle",
                 "Bambu Lab X1 Carbon 0.6 nozzle",
@@ -314,16 +407,12 @@ class Filament(BaseModel):
                 "Bambu Lab X1E 0.6 nozzle",
                 "Bambu Lab X1E 0.8 nozzle",
             ],
-            "filament_settings_id": [
-                " ".join(
-                    filter(None, [self.brand_name, self.material, self.material_type])
-                )
-            ],
+            "filament_settings_id": [profile_name],
             "inherits": base_profile,
             "from": "User",
             "is_custom_defined": "0",
             "filament_vendor": [self.brand_name],
-            "version": "1.10.1.50",
+            "version": bambu_studio_version,
         }
         if self.rgb is not None:
             bambu_lab_filament_json.update(
