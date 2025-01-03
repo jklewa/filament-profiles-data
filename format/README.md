@@ -50,11 +50,28 @@ Filament Data:
 
 ```json
 {
-  "123-3d-pla-basic-filament.json": {
+  "custom-123-3d-pla-basic-filament.json": {
     "name": "123-3D PLA Basic",
-    "filament_settings_id": [],
-    "inherits": "",
-    "from": "",
+    "filament_type": [
+      "PLA"
+    ],
+    "compatible_printers": [
+      "Bambu Lab X1 Carbon 0.4 nozzle",
+      "Bambu Lab X1 Carbon 0.6 nozzle",
+      "Bambu Lab X1 Carbon 0.8 nozzle",
+      "Bambu Lab P1S 0.4 nozzle",
+      "Bambu Lab P1S 0.6 nozzle",
+      "Bambu Lab P1S 0.8 nozzle",
+      "Bambu Lab X1E 0.4 nozzle",
+      "Bambu Lab X1E 0.6 nozzle",
+      "Bambu Lab X1E 0.8 nozzle"
+    ],
+    "filament_settings_id": [
+      "123-3D PLA Basic"
+    ],
+    "inherits": "Generic PLA",
+    "from": "User",
+    "is_custom_defined": "0",
     "filament_vendor": [
       "123-3D"
     ],
