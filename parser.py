@@ -268,7 +268,7 @@ if __name__ == "__main__":
     parser_group.add_argument(
         "--resource",
         type=str,
-        choices=resources,
+        choices=resources + ["raw"],
         metavar="RESOURCE",
         help="Parse one of: %(choices)s; defaults to --fetch",
     )
@@ -278,8 +278,11 @@ if __name__ == "__main__":
         login()
         exit(0)
     elif args.fetch:
-        args.resource = args.fetch
+        args.resource = args.resource or args.fetch
         data_lines = fetch(args.fetch)
+        if args.resource == "raw":
+            print("\n".join(data_lines))
+            exit(0)
         data = parse(data_lines, args.resource)
     elif args.file and not args.resource:
         parser.error("--resource is required when using --file")
