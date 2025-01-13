@@ -437,7 +437,8 @@ class Filament(BaseModel):
         bed_temp_max = self.property_val("bed_temp_max")
         if bed_temp_min is not None or bed_temp_max is not None:
             # todo: better logic to determine best temp from range
-            temps = list(filter(None, [bed_temp_min, bed_temp_max]))
+            _temps = [bed_temp_min, bed_temp_max]
+            temps = [temp for temp in _temps if temp is not None]
             best_temp: int = sum(temps) // len(temps)
             bambu_lab_filament_json.update(
                 {
