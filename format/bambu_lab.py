@@ -3,7 +3,6 @@ import argparse
 import json
 import re
 import sys
-from math import floor
 from typing import Any, Dict, Optional, Union
 from unittest.mock import ANY
 
@@ -175,7 +174,7 @@ Bambu PET-CF @BBL P1P.json
 Bambu PET-CF @base.json
 '''
 
-# A mapping of material_id and material_type_id to base profile
+# A mapping of material_key and material_type_key to base profile
 # Order is important, generic -> specific, lowest in list wins
 base_profiles = [
     ("abs", ANY, "Generic ABS"),
@@ -225,7 +224,7 @@ filament_types_available = (
     "PPS-CF", "TPU-AMS",
 )
 
-# A mapping of material_id and material_type_id to filament type
+# A mapping of material_key and material_type_key to filament type
 # Order is important, generic -> specific, lowest in list wins
 filament_types = [
     ("abs", ANY, "ABS"),
@@ -302,58 +301,79 @@ class PriceData(BaseModel):
             if value is not None and value != {}
         }
 
+class Properties(BaseModel):
+    adapter_url: Optional[str] = None
+    bed_temp_max: Optional[int] = None
+    bed_temp_min: Optional[int] = None
+    fan_speed_max: Optional[int] = None
+    fan_speed_min: Optional[int] = None
+    flow_ratio: Union[float, int, None] = None
+    k_value: Union[float, int, None] = None
+    max_volumetric_speed: Union[float, int, None] = None
+    softening_temp: Union[float, int, None] = None
+    spool_count: Optional[int] = None
+    spool_weight: Union[float, int, None] = None
+    temp_max: Optional[int] = None
+    temp_min: Optional[int] = None
+
+
+    @model_serializer(when_used="json")
+    def serialize_json(self) -> Dict[str, Any]:
+        model = dict(sorted(self.model_dump().items()))
+        return {
+            key: value
+            for key, value in model.items()
+            if value is not None and value != {}
+        }
+
 
 class Filament(BaseModel):
     ASIN: Optional[str]
-    adapterUrl: Optional[str]
-    bed_temp_max: Optional[int] = None
-    bed_temp_min: Optional[int] = None
-    brand_id: str
+    brand_key: str
     brand_name: str
     color: str
     created_at: str = Field(
         validation_alias=AliasChoices("created_at", "filament_created_at")
     )
     created_by: Optional[str] = None
+    default_properties: Optional[Properties] = Field(None)
+    default_website: Optional[str] = None
     deleted: Optional[str] = None
-    fan_speed_max: Optional[int] = None
-    fan_speed_min: Optional[int] = None
-    flow_ratio: Union[float, int, None] = None
     id: int = Field(validation_alias=AliasChoices("id", "filament_id"))
     image: Optional[str] = None
-    kValue: Union[float, int, None] = None
     material: str
-    material_id: str
+    material_key: str
     material_type: str
-    material_type_id: str
-    max_volumetric_speed: Union[float, int, None] = None
-    priceData: Union[PriceData, str, None] = Field(
-        None, validation_alias=AliasChoices("priceData", "price_data")
-    )
-    purchaseLink: Optional[str] = None
+    material_type_key: str
+    price_data: Union[PriceData, str, None] = None
+    properties: Properties = Field(default_factory=Properties)
     rgb: Optional[str]
-    softening_temp: Union[float, int, None] = None
+    short_code: Optional[str] = None
     spool_count: Optional[int] = None
-    spoolWeight: Union[float, int, None] = Field(
-        None, validation_alias=AliasChoices("spoolWeight", "empty_spool_weight")
-    )
+    spool_weight: Union[float, int, None] = None
     td_value: Union[float, int, None] = None
-    temp_max: Optional[int] = None
-    temp_min: Optional[int] = None
     total_td_votes: Optional[int] = None
     updated_at: str = Field(
         validation_alias=AliasChoices("updated_at", "filament_updated_at")
     )
     updated_by: Optional[str] = None
+    website: Optional[str] = None
 
     model_config = ConfigDict(strict=True, extra="ignore")
 
+    def property_val(self, key: str) -> Any:
+        if self.properties and getattr(self.properties, key, None) is not None:
+            return getattr(self.properties, key)
+        if self.default_properties:
+            return getattr(self.default_properties, key)
+        return None
+
     def to_bambu_lab_filament_format(self):
-        for material_id, material_type_id, base_profile in reversed(base_profiles):
-            if self.material_id == material_id and self.material_type_id == material_type_id:
+        for material_key, material_type_key, base_profile in reversed(base_profiles):
+            if self.material_key == material_key and self.material_type_key == material_type_key:
                 break
         else:
-            base_profile = f"Generic {self.material_id.upper()}"
+            base_profile = f"Generic {self.material_key.upper()}"
         if (base_profile + ".json") not in profiles_available:
             print(f"Warning: '{base_profile}.json' ({self.material} {self.material_type}) not in profiles", file=sys.stderr)
             base_profile = ""  # fallback to inherits:""
@@ -362,11 +382,11 @@ class Filament(BaseModel):
                 filter(None, [self.brand_name, self.material, self.material_type])
             )
         )
-        for material_id, material_type_id, filament_type in reversed(filament_types):
-            if self.material_id == material_id and self.material_type_id == material_type_id:
+        for material_key, material_type_key, filament_type in reversed(filament_types):
+            if self.material_key == material_key and self.material_type_key == material_type_key:
                 break
         else:
-            filament_type = self.material_id.upper()
+            filament_type = self.material_key.upper()
         if filament_type not in filament_types_available:
             print(f"Warning: '{filament_type}' ({self.material} {self.material_type}) not in filament_types", file=sys.stderr)
             filament_type = ""  # fallback to filament_type:[]
@@ -398,22 +418,26 @@ class Filament(BaseModel):
                     "default_filament_colour": [self.rgb],
                 }
             )
-        if self.temp_max is not None or self.temp_min is not None:
-            if self.temp_max is not None:
+        temp_max = self.property_val("temp_max")
+        temp_min = self.property_val("temp_min")
+        if temp_max is not None or temp_min is not None:
+            if temp_max is not None:
                 bambu_lab_filament_json.update(
                     {
-                        "nozzle_temperature_range_high": [f"{self.temp_max}"],
+                        "nozzle_temperature_range_high": [f"{temp_max}"],
                     }
                 )
-            if self.temp_min is not None:
+            if temp_min is not None:
                 bambu_lab_filament_json.update(
                     {
-                        "nozzle_temperature_range_low": [f"{self.temp_min}"],
+                        "nozzle_temperature_range_low": [f"{temp_min}"],
                     }
                 )
-        if self.bed_temp_min is not None or self.bed_temp_max is not None:
+        bed_temp_min = self.property_val("bed_temp_min")
+        bed_temp_max = self.property_val("bed_temp_max")
+        if bed_temp_min is not None or bed_temp_max is not None:
             # todo: better logic to determine best temp from range
-            temps = list(filter(None, [self.bed_temp_min, self.bed_temp_max]))
+            temps = list(filter(None, [bed_temp_min, bed_temp_max]))
             best_temp: int = sum(temps) // len(temps)
             bambu_lab_filament_json.update(
                 {
@@ -425,41 +449,46 @@ class Filament(BaseModel):
                     # "supertack_plate_temp_initial_layer": [f"{best_temp}"],
                 }
             )
-        if self.softening_temp is not None:
+        softening_temp = self.property_val("softening_temp")
+        if softening_temp is not None:
             bambu_lab_filament_json.update(
                 {
-                    "temperature_vitrification": [f"{self.softening_temp:.2f}".rstrip("0").rstrip(".")],
+                    "temperature_vitrification": [f"{softening_temp:.2f}".rstrip("0").rstrip(".")],
                 }
             )
-        if self.fan_speed_max is not None or self.fan_speed_min is not None:
-            if self.fan_speed_max is not None:
+        fan_speed_max = self.property_val("fan_speed_max")
+        fan_speed_min = self.property_val("fan_speed_min")
+        if fan_speed_max is not None or fan_speed_min is not None:
+            if fan_speed_max is not None:
                 bambu_lab_filament_json.update(
                     {
-                        "fan_max_speed": [f"{self.fan_speed_max}"],
+                        "fan_max_speed": [f"{fan_speed_max}"],
                     }
                 )
-            if self.fan_speed_min is not None:
+            if fan_speed_min is not None:
                 bambu_lab_filament_json.update(
                     {
-                        "fan_min_speed": [f"{self.fan_speed_min}"],
+                        "fan_min_speed": [f"{fan_speed_min}"],
                     }
                 )
-        if self.flow_ratio is not None:
+        flow_ratio = self.property_val("flow_ratio")
+        if flow_ratio is not None:
             bambu_lab_filament_json.update(
                 {
-                    "filament_flow_ratio": [f"{self.flow_ratio:.2f}".rstrip("0").rstrip(".")],
+                    "filament_flow_ratio": [f"{flow_ratio:.2f}".rstrip("0").rstrip(".")],
                 }
             )
-        if self.max_volumetric_speed is not None:
+        max_volumetric_speed = self.property_val("max_volumetric_speed")
+        if max_volumetric_speed is not None:
             bambu_lab_filament_json.update(
                 {
-                    "filament_max_volumetric_speed": [f"{self.max_volumetric_speed:.2f}".rstrip("0").rstrip(".")],
+                    "filament_max_volumetric_speed": [f"{max_volumetric_speed:.2f}".rstrip("0").rstrip(".")],
                 }
             )
-        if getattr(self.priceData, "price", None):
+        if getattr(self.price_data, "price", None):
             bambu_lab_filament_json.update(
                 {
-                    "filament_cost": [f"{self.priceData.price:.2f}".rstrip("0").rstrip(".")],
+                    "filament_cost": [f"{self.price_data.price:.2f}".rstrip("0").rstrip(".")],
                 }
             )
         if self.td_value not in (None, 0) and self.total_td_votes not in (None, 0):
@@ -470,17 +499,13 @@ class Filament(BaseModel):
             )
         # Unmapped fields:
         # color: str
-        # kValue: Union[float, int, None]
-        # spoolWeight: Union[float, int, None]
+        # props.k_value: Union[float, int, None]
+        # props.spool_weight: Union[float, int, None]
         return bambu_lab_filament_json
 
 
 class MyFilament(Filament):
     # Renamed fields
-    empty_spool_weight: Union[float, int, None] = Field(
-        None, alias="spoolWeight", validation_alias=AliasChoices("spoolWeight", "empty_spool_weight")
-    )
-    spoolWeight: Union[float, int, None] = Field(exclude=True)
     filament_created_at: str = Field(
         alias="created_at", validation_alias=AliasChoices("created_at", "filament_created_at")
     )
@@ -493,10 +518,9 @@ class MyFilament(Filament):
         alias="updated_at", validation_alias=AliasChoices("updated_at", "filament_updated_at")
     )
     updated_at: str = Field(exclude=True)
-    price_data: Union[PriceData, str, None] = Field(
-        None, alias="priceData", validation_alias=AliasChoices("priceData", "price_data")
-    )
-    priceData: Union[PriceData, str, None] = Field(exclude=True)
+
+    # Excluded fields
+    short_code: Optional[str] = Field(exclude=True)
 
     # Additional fields
     last_updated: str
@@ -545,16 +569,19 @@ def test_models():
 _base_example = """
     {
       "id": 1802,
-      "created_at": "2024-12-19T15:57:04.962+00:00",
+      "short_code": "2hYfZ5A9zscu",
+      "brand_key": "123-3d",
+      "material_key": "pla",
+      "material_type_key": "basic",
+      "brand_name": "123-3D",
+      "material": "PLA",
+      "material_type": "Basic",
       "color": "Zwart",
       "rgb": "#000000",
       "image": "/images/filaments/metallic_silver.jpg",
-      "kValue": 0.05,
-      "spoolWeight": 216,
-      "adapterUrl": null,
-      "purchaseLink": "https://www.123-3d.nl/123-3D-Filament-zwart-1-75-mm-PLA-1-1-kg-Jupiter-serie-i9729-t7316.html",
-      "ASIN": null,
-      "priceData": {
+      "website": "https://www.123-3d.nl/123-3D-Filament-zwart-1-75-mm-PLA-1-1-kg-Jupiter-serie-i9729-t7316.html",
+      "default_website": null,
+      "price_data": {
         "title": "3D-Fuel Standard PLA+ Filament for 3D Printing, Made in The USA, 3D Printer Filament, Dimensional Accuracy +/- 0.02 mm, 1.75 mm, 1 kg Spool, Midnight Black",
         "price": 29,
         "primeOnly": false,
@@ -585,27 +612,28 @@ _base_example = """
           }
         ]
       },
-      "flow_ratio": 0.98,
-      "temp_min": 195,
-      "temp_max": 235,
-      "fan_speed_min": 90,
-      "fan_speed_max": 100,
-      "softening_temp": 190,
-      "max_volumetric_speed": 12,
-      "bed_temp_min": 55,
-      "bed_temp_max": 75,
+      "properties": {
+        "temp_max": 235,
+        "temp_min": 195,
+        "bed_temp_max": 75,
+        "bed_temp_min": 55,
+        "spool_weight": 216,
+        "flow_ratio": 0.98
+      },
+      "default_properties": {
+        "fan_speed_min": 90,
+        "fan_speed_max": 100,
+        "softening_temp": 190,
+        "max_volumetric_speed": 12
+      },
+      "ASIN": null,
+      "td_value": 2.5,
+      "total_td_votes": 1,
+      "deleted": null,
+      "created_at": "2024-12-19T15:57:04.962+00:00",
       "created_by": "f8bc55a7-a4e9-4823-9cc9-d93fba5febc7",
       "updated_at": "2024-12-19T16:08:28.114+00:00",
-      "updated_by": "f8bc55a7-a4e9-4823-9cc9-d93fba5febc7",
-      "deleted": null,
-      "brand_id": "123-3d",
-      "material_id": "pla",
-      "material_type_id": "basic",
-      "brand_name": "123-3D",
-      "material": "PLA",
-      "material_type": "Basic",
-      "td_value": 2.5,
-      "total_td_votes": 1
+      "updated_by": "f8bc55a7-a4e9-4823-9cc9-d93fba5febc7"
     }
     """
 
@@ -655,7 +683,7 @@ if __name__ == "__main__":
             filament.update(extra)
         try:
             f: Filament = validation_class.model_validate(filament)
-            filename = slugify(f"custom-{f.brand_id}-{f.material_id}-{f.material_type_id}") + "-filament.json"
+            filename = slugify(f"custom-{f.brand_key}-{f.material_key}-{f.material_type_key}") + "-filament.json"
             results[filename] = f.model_dump(mode="json") if args.raw else f.to_bambu_lab_filament_format()
         except pydantic.ValidationError as e:
             print(e, file=sys.stderr)
