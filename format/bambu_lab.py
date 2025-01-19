@@ -10,169 +10,56 @@ import pydantic
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_serializer
 
 bambu_studio_version = "1.10.1.50"
-profiles_available = '''
-Generic ABS @0.2 nozzle.json
-Generic ABS @BBL A1 0.2 nozzle.json
-Generic ABS @BBL A1.json
-Generic ABS @BBL X1E 0.2 nozzle.json
-Generic ABS @BBL X1E.json
-Generic ABS @base.json
-Generic ABS.json
-Generic ASA @0.2 nozzle.json
-Generic ASA @BBL A1 0.2 nozzle.json
-Generic ASA @BBL A1.json
-Generic ASA @BBL X1E 0.2 nozzle.json
-Generic ASA @BBL X1E.json
-Generic ASA @base.json
-Generic ASA.json
-Generic BVOH @BBL A1.json
-Generic BVOH @BBL A1M.json
-Generic BVOH @BBL X1C.json
-Generic BVOH @base.json
-Generic EVA @BBL A1.json
-Generic EVA @BBL A1M.json
-Generic EVA @BBL X1C.json
-Generic EVA @base.json
-Generic HIPS @BBL A1 0.2 nozzle.json
-Generic HIPS @BBL A1.json
-Generic HIPS @BBL A1M 0.2 nozzle.json
-Generic HIPS @BBL A1M.json
-Generic HIPS @BBL X1C 0.2 nozzle.json
-Generic HIPS @BBL X1C.json
-Generic HIPS @base.json
-Generic PA @BBL A1.json
-Generic PA-CF @BBL A1.json
-Generic PA-CF @BBL X1E.json
-Generic PA-CF.json
-Generic PA.json
-Generic PC @0.2 nozzle.json
-Generic PC @BBL A1 0.2 nozzle.json
-Generic PC @BBL A1.json
-Generic PC @BBL P1S 0.2 nozzle.json
-Generic PC @BBL P1S.json
-Generic PC @BBL X1E 0.2 nozzle.json
-Generic PC @BBL X1E.json
-Generic PC @base.json
-Generic PC.json
-Generic PCTG @BBL A1.json
-Generic PCTG @BBL A1M.json
-Generic PCTG @BBL X1C.json
-Generic PCTG @base.json
-Generic PE @BBL A1.json
-Generic PE @BBL A1M.json
-Generic PE @BBL X1C.json
-Generic PE @base.json
-Generic PE-CF @BBL A1.json
-Generic PE-CF @BBL A1M.json
-Generic PE-CF @BBL X1C.json
-Generic PE-CF @base.json
-Generic PETG @0.2 nozzle.json
-Generic PETG @BBL A1 0.2 nozzle.json
-Generic PETG @BBL A1.json
-Generic PETG @BBL A1M 0.2 nozzle.json
-Generic PETG @BBL A1M.json
-Generic PETG @base.json
-Generic PETG HF @BBL A1 0.2 nozzle.json
-Generic PETG HF @BBL A1.json
-Generic PETG HF @BBL A1M 0.2 nozzle.json
-Generic PETG HF @BBL A1M.json
-Generic PETG HF @BBL P1P 0.2 nozzle.json
-Generic PETG HF @BBL P1P.json
-Generic PETG HF @BBL X1C 0.2 nozzle.json
-Generic PETG HF @BBL X1C.json
-Generic PETG HF @base.json
-Generic PETG-CF @BBL A1.json
-Generic PETG-CF @BBL X1C.json
-Generic PETG-CF @base.json
-Generic PETG.json
-Generic PHA @BBL A1.json
-Generic PHA @BBL A1M.json
-Generic PHA @BBL X1C.json
-Generic PHA @base.json
-Generic PLA @0.2 nozzle.json
-Generic PLA @BBL A1 0.2 nozzle.json
-Generic PLA @BBL A1.json
-Generic PLA @BBL A1M 0.2 nozzle.json
-Generic PLA @BBL A1M.json
-Generic PLA @base.json
-Generic PLA High Speed @BBL A1 0.2 nozzle.json
-Generic PLA High Speed @BBL A1.json
-Generic PLA High Speed @BBL A1M 0.2 nozzle.json
-Generic PLA High Speed @BBL A1M.json
-Generic PLA High Speed @BBL P1P 0.2 nozzle.json
-Generic PLA High Speed @BBL P1P.json
-Generic PLA High Speed @BBL X1C 0.2 nozzle.json
-Generic PLA High Speed @BBL X1C.json
-Generic PLA High Speed @base.json
-Generic PLA Silk @BBL A1.json
-Generic PLA Silk @BBL A1M.json
-Generic PLA Silk @base.json
-Generic PLA Silk.json
-Generic PLA-CF @BBL A1.json
-Generic PLA-CF @BBL A1M.json
-Generic PLA-CF @base.json
-Generic PLA-CF.json
-Generic PLA.json
-Generic PP @BBL A1.json
-Generic PP @BBL A1M.json
-Generic PP @BBL X1C.json
-Generic PP @base.json
-Generic PP-CF @BBL A1.json
-Generic PP-CF @BBL X1C.json
-Generic PP-CF @base.json
-Generic PP-GF @BBL A1.json
-Generic PP-GF @BBL X1C.json
-Generic PP-GF @base.json
-Generic PPA-CF @BBL X1C.json
-Generic PPA-CF @BBL X1E.json
-Generic PPA-CF @base.json
-Generic PPA-GF @BBL X1C.json
-Generic PPA-GF @BBL X1E.json
-Generic PPA-GF @base.json
-Generic PPS @BBL X1E.json
-Generic PPS @base.json
-Generic PPS-CF @BBL X1E.json
-Generic PPS-CF @base.json
-Generic PVA @0.2 nozzle.json
-Generic PVA @BBL A1 0.2 nozzle.json
-Generic PVA @BBL A1.json
-Generic PVA @BBL A1M 0.2 nozzle.json
-Generic PVA @BBL A1M.json
-Generic PVA @base.json
-Generic PVA.json
-Generic TPU @BBL A1.json
-Generic TPU @BBL A1M.json
-Generic TPU for AMS @BBL A1.json
-Generic TPU for AMS @BBL A1M.json
-Generic TPU for AMS @BBL P1P.json
-Generic TPU for AMS @BBL X1C.json
-Generic TPU for AMS @base.json
-Generic TPU.json
-Generic ABS @BBL P1P 0.2 nozzle.json
-Generic ABS @BBL P1P.json
-Generic ASA @BBL P1P 0.2 nozzle.json
-Generic ASA @BBL P1P.json
-Generic PA @BBL P1P.json
-Generic PA-CF @BBL P1P.json
-Generic PC @BBL P1P 0.2 nozzle.json
-Generic PC @BBL P1P.json
-Generic PETG @BBL P1P 0.2 nozzle.json
-Generic PETG @BBL P1P.json
-Generic PETG-CF @BBL A1M.json
-Generic PETG-CF @BBL P1P.json
-Generic PLA @BBL P1P 0.2 nozzle.json
-Generic PLA @BBL P1P.json
-Generic PLA Silk @BBL P1P.json
-Generic PLA-CF @BBL P1P.json
-Generic PVA @BBL P1P 0.2 nozzle.json
-Generic PVA @BBL P1P.json
-Generic TPU @BBL P1P.json
-Bambu PET-CF @BBL A1.json
-Bambu PET-CF @BBL X1C.json
-Bambu PET-CF @BBL X1E.json
-Bambu PET-CF @BBL P1P.json
-Bambu PET-CF @base.json
-'''
+# https://github.com/bambulab/BambuStudio/tree/98bfabdd/resources/profiles/BBL/filament
+profiles_available = {
+    "Generic ABS @0.2 nozzle", "Generic ABS @BBL A1 0.2 nozzle", "Generic ABS @BBL A1",
+    "Generic ABS @BBL X1E 0.2 nozzle", "Generic ABS @BBL X1E", "Generic ABS @base", "Generic ABS",
+    "Generic ASA @0.2 nozzle", "Generic ASA @BBL A1 0.2 nozzle", "Generic ASA @BBL A1",
+    "Generic ASA @BBL X1E 0.2 nozzle", "Generic ASA @BBL X1E", "Generic ASA @base", "Generic ASA",
+    "Generic BVOH @BBL A1", "Generic BVOH @BBL A1M", "Generic BVOH @BBL X1C", "Generic BVOH @base",
+    "Generic EVA @BBL A1", "Generic EVA @BBL A1M", "Generic EVA @BBL X1C", "Generic EVA @base",
+    "Generic HIPS @BBL A1 0.2 nozzle", "Generic HIPS @BBL A1", "Generic HIPS @BBL A1M 0.2 nozzle",
+    "Generic HIPS @BBL A1M", "Generic HIPS @BBL X1C 0.2 nozzle", "Generic HIPS @BBL X1C", "Generic HIPS @base",
+    "Generic PA @BBL A1", "Generic PA-CF @BBL A1", "Generic PA-CF @BBL X1E", "Generic PA-CF", "Generic PA",
+    "Generic PC @0.2 nozzle", "Generic PC @BBL A1 0.2 nozzle", "Generic PC @BBL A1", "Generic PC @BBL P1S 0.2 nozzle",
+    "Generic PC @BBL P1S", "Generic PC @BBL X1E 0.2 nozzle", "Generic PC @BBL X1E", "Generic PC @base", "Generic PC",
+    "Generic PCTG @BBL A1", "Generic PCTG @BBL A1M", "Generic PCTG @BBL X1C", "Generic PCTG @base",
+    "Generic PE @BBL A1", "Generic PE @BBL A1M", "Generic PE @BBL X1C", "Generic PE @base", "Generic PE-CF @BBL A1",
+    "Generic PE-CF @BBL A1M", "Generic PE-CF @BBL X1C", "Generic PE-CF @base", "Generic PETG @0.2 nozzle",
+    "Generic PETG @BBL A1 0.2 nozzle", "Generic PETG @BBL A1", "Generic PETG @BBL A1M 0.2 nozzle",
+    "Generic PETG @BBL A1M", "Generic PETG @base", "Generic PETG HF @BBL A1 0.2 nozzle", "Generic PETG HF @BBL A1",
+    "Generic PETG HF @BBL A1M 0.2 nozzle", "Generic PETG HF @BBL A1M", "Generic PETG HF @BBL P1P 0.2 nozzle",
+    "Generic PETG HF @BBL P1P", "Generic PETG HF @BBL X1C 0.2 nozzle", "Generic PETG HF @BBL X1C",
+    "Generic PETG HF @base", "Generic PETG-CF @BBL A1", "Generic PETG-CF @BBL X1C", "Generic PETG-CF @base",
+    "Generic PETG", "Generic PHA @BBL A1", "Generic PHA @BBL A1M", "Generic PHA @BBL X1C", "Generic PHA @base",
+    "Generic PLA @0.2 nozzle", "Generic PLA @BBL A1 0.2 nozzle", "Generic PLA @BBL A1",
+    "Generic PLA @BBL A1M 0.2 nozzle", "Generic PLA @BBL A1M", "Generic PLA @base",
+    "Generic PLA High Speed @BBL A1 0.2 nozzle", "Generic PLA High Speed @BBL A1",
+    "Generic PLA High Speed @BBL A1M 0.2 nozzle", "Generic PLA High Speed @BBL A1M",
+    "Generic PLA High Speed @BBL P1P 0.2 nozzle", "Generic PLA High Speed @BBL P1P",
+    "Generic PLA High Speed @BBL X1C 0.2 nozzle", "Generic PLA High Speed @BBL X1C", "Generic PLA High Speed @base",
+    "Generic PLA Silk @BBL A1", "Generic PLA Silk @BBL A1M", "Generic PLA Silk @base", "Generic PLA Silk",
+    "Generic PLA-CF @BBL A1", "Generic PLA-CF @BBL A1M", "Generic PLA-CF @base", "Generic PLA-CF", "Generic PLA",
+    "Generic PP @BBL A1", "Generic PP @BBL A1M", "Generic PP @BBL X1C", "Generic PP @base", "Generic PP-CF @BBL A1",
+    "Generic PP-CF @BBL X1C", "Generic PP-CF @base", "Generic PP-GF @BBL A1", "Generic PP-GF @BBL X1C",
+    "Generic PP-GF @base", "Generic PPA-CF @BBL X1C", "Generic PPA-CF @BBL X1E", "Generic PPA-CF @base",
+    "Generic PPA-GF @BBL X1C", "Generic PPA-GF @BBL X1E", "Generic PPA-GF @base", "Generic PPS @BBL X1E",
+    "Generic PPS @base", "Generic PPS-CF @BBL X1E", "Generic PPS-CF @base", "Generic PVA @0.2 nozzle",
+    "Generic PVA @BBL A1 0.2 nozzle", "Generic PVA @BBL A1", "Generic PVA @BBL A1M 0.2 nozzle", "Generic PVA @BBL A1M",
+    "Generic PVA @base", "Generic PVA", "Generic TPU @BBL A1", "Generic TPU @BBL A1M", "Generic TPU for AMS @BBL A1",
+    "Generic TPU for AMS @BBL A1M", "Generic TPU for AMS @BBL P1P", "Generic TPU for AMS @BBL X1C",
+    "Generic TPU for AMS @base", "Generic TPU", "Generic ABS @BBL P1P 0.2 nozzle", "Generic ABS @BBL P1P",
+    "Generic ASA @BBL P1P 0.2 nozzle", "Generic ASA @BBL P1P", "Generic PA @BBL P1P", "Generic PA-CF @BBL P1P",
+    "Generic PC @BBL P1P 0.2 nozzle", "Generic PC @BBL P1P", "Generic PETG @BBL P1P 0.2 nozzle",
+    "Generic PETG @BBL P1P", "Generic PETG-CF @BBL A1M", "Generic PETG-CF @BBL P1P", "Generic PLA @BBL P1P 0.2 nozzle",
+    "Generic PLA @BBL P1P", "Generic PLA Silk @BBL P1P", "Generic PLA-CF @BBL P1P", "Generic PVA @BBL P1P 0.2 nozzle",
+    "Generic PVA @BBL P1P", "Generic TPU @BBL P1P", "Bambu PET-CF @BBL A1", "Bambu PET-CF @BBL X1C",
+    "Bambu PET-CF @BBL X1E", "Bambu PET-CF @BBL P1P", "Bambu PET-CF @base", "fdm_filament_abs", "fdm_filament_asa",
+    "fdm_filament_bvoh", "fdm_filament_common", "fdm_filament_eva", "fdm_filament_hips", "fdm_filament_pa",
+    "fdm_filament_pc", "fdm_filament_pctg", "fdm_filament_pe", "fdm_filament_pet", "fdm_filament_pha",
+    "fdm_filament_pla", "fdm_filament_pp", "fdm_filament_ppa", "fdm_filament_pps", "fdm_filament_pva",
+    "fdm_filament_tpu",
+}
 
 # A mapping of material_key and material_type_key to base profile
 # Order is important, generic -> specific, lowest in list wins
@@ -181,7 +68,7 @@ base_profiles = [
     ("abs-plus", ANY, "Generic ABS"),
     ("asa", ANY, "Generic ASA"),
     ("asa-plus", ANY, "Generic ASA"),
-    ("hips", ANY, "Generic HIPS"),
+    ("hips", ANY, "Generic HIPS @BBL X1C"),
     ("pa", ANY, "Generic PA"),
     ("pa", "cf", "Generic PA-CF"),
     ("pa12", ANY, "Generic PA"),
@@ -193,7 +80,7 @@ base_profiles = [
     ("pctg", ANY, "Generic PCTG @BBL X1C"),
     ("pe", ANY, "Generic PE"),
     ("pe", "cf", "Generic PE-CF @BBL X1C"),
-    # we don't have a pet basic profile
+    ("pet", ANY, "fdm_filament_pet"),
     ("pet", "cf", "Bambu PET-CF @BBL X1C"),
     ("petg", ANY, "Generic PETG"),
     ("petg", "cf", "Generic PETG-CF @BBL X1C"),
@@ -212,17 +99,20 @@ base_profiles = [
     ("tpu", ANY, "Generic TPU"),
 ]
 
-filament_types_available = (
-    # https://github.com/SoftFever/OrcaSlicer/blob/main/src/slic3r/GUI/CreatePresetsDialog.cpp#L62C57-L65C139
-    "PLA", "rPLA", "PLA+", "PLA Tough", "PETG", "ABS", "ASA", "FLEX", "HIPS", "PA", "PACF",
-    "NYLON", "PVA", "PVB", "PC", "PCABS", "PCTG", "PCCF", "PHA", "PP", "PEI", "PET",
-    "PETGCF", "PTBA", "PTBA90A", "PEEK", "TPU93A", "TPU75D", "TPU", "TPU92A", "TPU98A", "Misc",
-    "TPE", "GLAZE", "Nylon", "CPE", "METAL", "ABST", "Carbon Fiber", "SBS",
-    # Bambu Studio specific
-    "ABS-GF", "ASA-Aero", "ASA-CF", "BVOH", "EVA", "PA-CF", "PA-GF", "PA6-CF", "PE", "PE-CF",
-    "PET-CF", "PETG-CF", "PLA-AERO", "PLA-CF", "PP-CF", "PP-GF", "PPA-CF", "PPA-GF", "PPS",
-    "PPS-CF", "TPU-AMS",
-)
+filament_types_available = {
+    # https://github.com/bambulab/BambuStudio/blob/98bfabdd/src/slic3r/GUI/CreatePresetsDialog.cpp#L43
+    "PLA", "PLA+", "PLA Tough", "PETG", "ABS", "ASA", "FLEX", "HIPS", "PA", "PACF", "NYLON", "PVA", "PC", "PCABS",
+    "PCTG", "PCCF", "PP", "PEI", "PET", "PETG", "PETGCF", "PTBA", "PTBA90A", "PEEK", "TPU93A", "TPU75D", "TPU",
+    "TPU-AMS", "TPU92A", "TPU98A", "Misc", "TPE", "GLAZE", "Nylon", "CPE", "METAL", "ABST", "Carbon Fiber",
+    # https://github.com/bambulab/BambuStudio/blob/98bfabdd/src/libslic3r/PrintConfig.cpp#L1572
+    "PLA", "ABS", "ASA", "ASA-CF", "PETG", "PCTG", "TPU", "TPU-AMS", "PC", "PA", "PA-CF", "PA-GF", "PA6-CF", "PLA-CF",
+    "PET-CF", "PETG-CF", "PVA", "HIPS", "PLA-AERO", "PPS", "PPS-CF", "PPA-CF", "PPA-GF", "ABS-GF", "ASA-Aero", "PE",
+    "PP", "EVA", "PHA", "BVOH", "PE-CF", "PP-CF", "PP-GF",
+    # https://github.com/SoftFever/OrcaSlicer/blob/2ea2ab08/src/slic3r/GUI/CreatePresetsDialog.cpp#L62C57-L65C139
+    "PLA", "rPLA", "PLA+", "PLA Tough", "PETG", "ABS", "ASA", "FLEX", "HIPS", "PA", "PACF", "NYLON", "PVA", "PVB", "PC",
+    "PCABS", "PCTG", "PCCF", "PHA", "PP", "PEI", "PET", "PETGCF", "PTBA", "PTBA90A", "PEEK", "TPU93A", "TPU75D", "TPU",
+    "TPU92A", "TPU98A", "Misc", "TPE", "GLAZE", "Nylon", "CPE", "METAL", "ABST", "Carbon Fiber", "SBS",
+}
 
 # A mapping of material_key and material_type_key to filament type
 # Order is important, generic -> specific, lowest in list wins
@@ -270,6 +160,36 @@ filament_types = [
     ("tpu", "ams", "TPU-AMS"),
 ]
 
+filament_options = {
+    "vendor", "name", "version", "from", "is_custom_defined", "instantiation", "type",
+    # https://github.com/bambulab/BambuStudio/blob/98bfabdd/src/libslic3r/Preset.cpp#L1853C30-L1857C30
+    "compatible_prints", "compatible_prints_condition", "compatible_printers", "compatible_printers_condition",
+    "inherits", "print_settings_id", "filament_settings_id", "sla_print_settings_id", "sla_material_settings_id",
+    "printer_settings_id", "printer_model", "printer_variant", "default_print_profile", "default_filament_profile",
+    "default_sla_print_profile", "default_sla_material_profile",
+    # https://github.com/bambulab/BambuStudio/blob/98bfabdd/src/libslic3r/Preset.cpp#L857
+    "default_filament_colour", "required_nozzle_HRC", "filament_diameter", "filament_type", "filament_soluble",
+    "filament_is_support", "filament_scarf_seam_type", "filament_scarf_height", "filament_scarf_gap",
+    "filament_scarf_length", "filament_max_volumetric_speed", "filament_flow_ratio", "filament_density",
+    "filament_cost", "filament_minimal_purge_on_wipe_tower", "nozzle_temperature", "nozzle_temperature_initial_layer",
+    "cool_plate_temp", "eng_plate_temp", "hot_plate_temp", "textured_plate_temp", "cool_plate_temp_initial_layer",
+    "eng_plate_temp_initial_layer", "hot_plate_temp_initial_layer", "textured_plate_temp_initial_layer",
+    "supertack_plate_temp_initial_layer", "supertack_plate_temp", "temperature_vitrification",
+    "reduce_fan_stop_start_freq", "slow_down_for_layer_cooling", "fan_min_speed", "fan_max_speed",
+    "enable_overhang_bridge_fan", "overhang_fan_speed", "overhang_fan_threshold",
+    "overhang_threshold_participating_cooling", "close_fan_the_first_x_layers", "full_fan_speed_layer",
+    "fan_cooling_layer_time", "slow_down_layer_time", "slow_down_min_speed", "filament_start_gcode",
+    "filament_end_gcode", "activate_air_filtration", "during_print_exhaust_fan_speed",
+    "complete_print_exhaust_fan_speed", "filament_retraction_length", "filament_z_hop", "filament_z_hop_types",
+    "filament_retraction_speed", "filament_deretraction_speed", "filament_retract_restart_extra",
+    "filament_retraction_minimum_travel", "filament_retract_when_changing_layer", "filament_wipe",
+    "filament_retract_before_wipe", "filament_vendor", "compatible_prints", "compatible_prints_condition",
+    "compatible_printers", "compatible_printers_condition", "inherits", "filament_wipe_distance",
+    "additional_cooling_fan_speed", "nozzle_temperature_range_low", "nozzle_temperature_range_high",
+    "enable_pressure_advance", "pressure_advance", "chamber_temperatures", "filament_notes",
+    "filament_long_retractions_when_cut", "filament_retraction_distances_when_cut", "filament_shrink",
+}
+
 
 class Image(BaseModel):
     height: int
@@ -301,6 +221,7 @@ class PriceData(BaseModel):
             if value is not None and value != {}
         }
 
+
 class Properties(BaseModel):
     adapter_url: Optional[str] = None
     bed_temp_max: Optional[int] = None
@@ -315,7 +236,6 @@ class Properties(BaseModel):
     spool_weight: Union[float, int, None] = None
     temp_max: Optional[int] = None
     temp_min: Optional[int] = None
-
 
     @model_serializer(when_used="json")
     def serialize_json(self) -> Dict[str, Any]:
@@ -370,25 +290,35 @@ class Filament(BaseModel):
 
     def to_bambu_lab_filament_format(self):
         for material_key, material_type_key, base_profile in reversed(base_profiles):
-            if self.material_key == material_key and self.material_type_key == material_type_key:
+            if (
+                self.material_key == material_key
+                and self.material_type_key == material_type_key
+            ):
                 break
         else:
             base_profile = f"Generic {self.material_key.upper()}"
-        if (base_profile + ".json") not in profiles_available:
-            print(f"Warning: '{base_profile}.json' ({self.material} {self.material_type}) not in profiles", file=sys.stderr)
-            base_profile = ""  # fallback to inherits:""
-        profile_name = (
-            " ".join(
-                filter(None, [self.brand_name, self.material, self.material_type])
+        if base_profile not in profiles_available:
+            print(
+                f"Warning: '{base_profile}.json' ({self.material} {self.material_type}) not in profiles",
+                file=sys.stderr,
             )
+            base_profile = ""  # fallback to inherits:""
+        profile_name = " ".join(
+            filter(None, [self.brand_name, self.material, self.material_type])
         )
         for material_key, material_type_key, filament_type in reversed(filament_types):
-            if self.material_key == material_key and self.material_type_key == material_type_key:
+            if (
+                self.material_key == material_key
+                and self.material_type_key == material_type_key
+            ):
                 break
         else:
             filament_type = self.material_key.upper()
         if filament_type not in filament_types_available:
-            print(f"Warning: '{filament_type}' ({self.material} {self.material_type}) not in filament_types", file=sys.stderr)
+            print(
+                f"Warning: '{filament_type}' ({self.material} {self.material_type}) not in filament_types",
+                file=sys.stderr,
+            )
             filament_type = ""  # fallback to filament_type:[]
 
         bambu_lab_filament_json = {
@@ -454,7 +384,9 @@ class Filament(BaseModel):
         if softening_temp is not None:
             bambu_lab_filament_json.update(
                 {
-                    "temperature_vitrification": [f"{softening_temp:.2f}".rstrip("0").rstrip(".")],
+                    "temperature_vitrification": [
+                        f"{softening_temp:.2f}".rstrip("0").rstrip(".")
+                    ],
                 }
             )
         fan_speed_max = self.property_val("fan_speed_max")
@@ -476,39 +408,55 @@ class Filament(BaseModel):
         if flow_ratio is not None:
             bambu_lab_filament_json.update(
                 {
-                    "filament_flow_ratio": [f"{flow_ratio:.2f}".rstrip("0").rstrip(".")],
+                    "filament_flow_ratio": [
+                        f"{flow_ratio:.2f}".rstrip("0").rstrip(".")
+                    ],
                 }
             )
         max_volumetric_speed = self.property_val("max_volumetric_speed")
         if max_volumetric_speed is not None:
             bambu_lab_filament_json.update(
                 {
-                    "filament_max_volumetric_speed": [f"{max_volumetric_speed:.2f}".rstrip("0").rstrip(".")],
+                    "filament_max_volumetric_speed": [
+                        f"{max_volumetric_speed:.2f}".rstrip("0").rstrip(".")
+                    ],
                 }
             )
         if getattr(self.price_data, "price", None):
             bambu_lab_filament_json.update(
                 {
-                    "filament_cost": [f"{self.price_data.price:.2f}".rstrip("0").rstrip(".")],
+                    "filament_cost": [
+                        f"{self.price_data.price:.2f}".rstrip("0").rstrip(".")
+                    ],
                 }
             )
         if self.td_value not in (None, 0) and self.total_td_votes not in (None, 0):
             bambu_lab_filament_json.update(
                 {
-                    "filament_retraction_minimum_travel": [f"{self.td_value:.2f}".rstrip("0").rstrip(".")],
+                    "filament_retraction_minimum_travel": [
+                        f"{self.td_value:.2f}".rstrip("0").rstrip(".")
+                    ],
                 }
             )
         # Unmapped fields:
         # color: str
         # props.k_value: Union[float, int, None]
         # props.spool_weight: Union[float, int, None]
+
+        self.validate_bambu_lab_format(bambu_lab_filament_json)
         return bambu_lab_filament_json
+
+    def validate_bambu_lab_format(self, data: dict):
+        unknown_keys = set(data.keys()) - set(filament_options)
+        if unknown_keys:
+            raise ValueError(f"Unknown keys: {', '.join(unknown_keys)}")
 
 
 class MyFilament(Filament):
     # Renamed fields
     filament_created_at: str = Field(
-        alias="created_at", validation_alias=AliasChoices("created_at", "filament_created_at")
+        alias="created_at",
+        validation_alias=AliasChoices("created_at", "filament_created_at"),
     )
     created_at: str = Field(exclude=True)
     filament_id: int = Field(
@@ -516,7 +464,8 @@ class MyFilament(Filament):
     )
     id: int = Field(exclude=True)
     filament_updated_at: str = Field(
-        alias="updated_at", validation_alias=AliasChoices("updated_at", "filament_updated_at")
+        alias="updated_at",
+        validation_alias=AliasChoices("updated_at", "filament_updated_at"),
     )
     updated_at: str = Field(exclude=True)
 
@@ -638,7 +587,6 @@ _base_example = """
     }
     """
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -646,7 +594,10 @@ if __name__ == "__main__":
         "file", nargs="?", type=argparse.FileType("r"), help="path to a filaments.json"
     )
     parser.add_argument(
-        "myfile", nargs="?", type=argparse.FileType("r"), help="path to a myfilaments.json"
+        "myfile",
+        nargs="?",
+        type=argparse.FileType("r"),
+        help="path to a myfilaments.json",
     )
     parser.add_argument(
         "--test", action="store_true", help="Test models with data/filaments.json"
@@ -666,14 +617,20 @@ if __name__ == "__main__":
     else:
         filaments = json.load(args.file)["filaments"]
     if args.myfile is not None:
-        my_filaments = {filament["filament_id"]: filament for filament in json.load(args.myfile)["filaments"]}
+        my_filaments = {
+            filament["filament_id"]: filament
+            for filament in json.load(args.myfile)["filaments"]
+        }
     else:
         my_filaments = None
     results = {}
     for filament in filaments:
         if filament.get("filament_id", ""):
             # detected myfilament format in "filaments.json" file
-            print(f'Error: Cannot load "myfilaments.json" without "filaments.json"! Try: {sys.argv[0]} path/to/filaments.json {args.file.name}', file=sys.stderr)
+            print(
+                f'Error: Cannot load "myfilaments.json" without "filaments.json"! Try: {sys.argv[0]} path/to/filaments.json {args.file.name}',
+                file=sys.stderr,
+            )
             exit(1)
         validation_class = Filament
         if my_filaments:
@@ -684,8 +641,15 @@ if __name__ == "__main__":
             filament.update(extra)
         try:
             f: Filament = validation_class.model_validate(filament)
-            filename = slugify(f"custom-{f.brand_key}-{f.material_key}-{f.material_type_key}") + "-filament.json"
-            results[filename] = f.model_dump(mode="json") if args.raw else f.to_bambu_lab_filament_format()
+            filename = (
+                slugify(f"custom-{f.brand_key}-{f.material_key}-{f.material_type_key}")
+                + "-filament.json"
+            )
+            results[filename] = (
+                f.model_dump(mode="json")
+                if args.raw
+                else f.to_bambu_lab_filament_format()
+            )
         except pydantic.ValidationError as e:
             print(e, file=sys.stderr)
             print(filament, file=sys.stderr)
