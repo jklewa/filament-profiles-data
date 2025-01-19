@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import os
 import re
+import shutil
 import sys
 from typing import Any, Dict, Optional, Union
 from unittest.mock import ANY
@@ -605,6 +607,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--raw", action="store_true", help="Output raw json instead of bambu_lab format"
     )
+    parser.add_argument(
+        "--dir", help="Output directory (instead of stdout)"
+    )
     args = parser.parse_args()
 
     if args.test:
@@ -641,9 +646,11 @@ if __name__ == "__main__":
             filament.update(extra)
         try:
             f: Filament = validation_class.model_validate(filament)
-            filename = (
-                slugify(f"custom-{f.brand_key}-{f.material_key}-{f.material_type_key}")
-                + "-filament.json"
+            filename = os.path.join(
+                "filaments",
+                slugify(f.material_key).replace("-", "_"),
+                slugify(f.material_type_key).replace("-", "_"),
+                slugify(f"{f.brand_key}-{f.material_key}-{f.material_type_key}") + "-BBL-filament.json",
             )
             results[filename] = (
                 f.model_dump(mode="json")
@@ -654,6 +661,15 @@ if __name__ == "__main__":
             print(e, file=sys.stderr)
             print(filament, file=sys.stderr)
             exit(1)
-    # sort filename keys
-    results = dict(sorted(results.items()))
-    print(json.dumps(results, indent=2))
+
+    if args.dir is None:
+        # sort filename keys
+        results = dict(sorted(results.items()))
+        print(json.dumps(results, indent=2))
+    else:
+        shutil.rmtree(os.path.join(args.dir, "filaments"), ignore_errors=True)
+        for filepath, data in results.items():
+            new_file = os.path.join(args.dir, filepath)
+            os.makedirs(os.path.dirname(new_file), exist_ok=True)
+            with open(new_file, "w") as of:
+                json.dump(data, of, indent=2)
