@@ -50,7 +50,7 @@ Filament Data:
 
 ```json
 {
-  "custom-123-3d-pla-basic-filament.json": {
+  "filaments/pla/123-3d-pla-basic-BBL-filament.json": {
     "name": "123-3D PLA Basic",
     "filament_type": [
       "PLA"
@@ -89,6 +89,12 @@ Filament Data:
       "65"
     ],
     "hot_plate_temp_initial_layer": [
+      "65"
+    ],
+    "textured_plate_temp": [
+      "65"
+    ],
+    "textured_plate_temp_initial_layer": [
       "65"
     ],
     "temperature_vitrification": [

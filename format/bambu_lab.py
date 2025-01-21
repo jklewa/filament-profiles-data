@@ -376,6 +376,8 @@ class Filament(BaseModel):
                 {
                     "hot_plate_temp": [f"{best_temp}"],
                     "hot_plate_temp_initial_layer": [f"{best_temp}"],
+                    "textured_plate_temp": [f"{best_temp}"],
+                    "textured_plate_temp_initial_layer": [f"{best_temp}"],
                     # "cool_plate_temp": [f"{best_temp}"],
                     # "cool_plate_temp_initial_layer": [f"{best_temp}"],
                     # "supertack_plate_temp": [f"{best_temp}"],
@@ -649,7 +651,6 @@ if __name__ == "__main__":
             filename = os.path.join(
                 "filaments",
                 slugify(f.material_key).replace("-", "_"),
-                slugify(f.material_type_key).replace("-", "_"),
                 slugify(f"{f.brand_key}-{f.material_key}-{f.material_type_key}") + "-BBL-filament.json",
             )
             results[filename] = (
