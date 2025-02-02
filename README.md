@@ -15,13 +15,7 @@ Authenticated Resources:
 
 Some resources (like `myfilaments`) require authentication:
 
-* Email/Password Login (Recommended):
-   ```bash
-   ./parser.py login
-   ```
-   This will prompt for your email and password, then save the authentication token to `.env`
-
-* GitHub OAuth / Manual Authentication:
+* Manual Authentication:
     1. Visit https://3dfilamentprofiles.com/my/filaments
     2. Open the browser's DevTools (F12) > Application > Cookies
     3. Copy the `*auth-token*` value(s) to `.env` (see [.env.example](./.env.example))
@@ -38,21 +32,17 @@ Fetch and parse:
 
 Command line arguments:
 ```
-usage: parser.py [-h] [--login] [--fetch RESOURCE] [--file FILE] [--resource RESOURCE]
+usage: parser.py [-h] [--fetch RESOURCE] [--file FILE] [--resource RESOURCE]
 
-optional arguments:
+options:
   -h, --help           show this help message and exit
-
-Login:
-  --login              Login to 3dfilamentprofiles.com (only used by 'myfilaments')
 
 Source:
   --fetch RESOURCE     Fetch one of: filaments, brands, materials, dryers, myfilaments
   --file FILE          path to the file to parse
 
 Parse:
-  --resource RESOURCE  Parse one of: filaments, brands, materials, dryers, myfilaments; defaults to --fetch
-```
+  --resource RESOURCE  Parse one of: filaments, brands, materials, dryers, myfilaments, raw; defaults to --fetch```
 
 Examples:
 ```bash

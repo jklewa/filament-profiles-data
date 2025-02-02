@@ -22,7 +22,6 @@ REF_USE_PATTERN = r'"\$(%s)"' % REF_ID_PATTERN
 LINE_PATTERN = r"(%s):(.+)$" % REF_ID_PATTERN
 TARGET_SEARCH_PATTERN = '{"%s":'
 TARGET_ID_PATTERN = rf'"%s":\s*"\$({REF_ID_PATTERN})"'
-LOGIN_NEXT_ACTION_PATTERN = r'type="submit" name="\$ACTION_ID_([a-z0-9]+)"'
 
 
 def new_session():
@@ -38,7 +37,7 @@ def get_auth_session():
     cookies = os.getenv("AUTH_COOKIES", "").strip()
     if len(cookies) == 0:
         print(
-            f"Error: Missing AUTH_COOKIES, try {sys.argv[0]} --login", file=sys.stderr
+            f"Error: Missing AUTH_COOKIES, see .env.example", file=sys.stderr
         )
         exit(1)
     for cookie in cookies.split(";"):
@@ -55,53 +54,6 @@ def save_auth(cookies: List[Tuple[str, str]]):
     """Save authentication cookies to .env file."""
     set_key(ENV_FILE, "AUTH_COOKIES", "; ".join("=".join(cookie) for cookie in cookies))
     print("Auth saved to .env", file=sys.stderr)
-
-
-def login():
-    """Login to 3dfilamentprofiles.com and save the token."""
-    email = input("Email: ")
-    password = getpass.getpass("Password: ")
-
-    login_next_action = re.search(
-        LOGIN_NEXT_ACTION_PATTERN, requests.get(f"{BASE_URL}/login").text
-    ).group(1)
-    print("Logging in...", file=sys.stderr)
-    headers = {
-        "accept": "text/x-component",
-        "dnt": "1",
-        "next-action": login_next_action,
-    }
-    form_data = {
-        "1_email": email,
-        "1_password": password,
-        "0": '["$K1"]',
-    }
-    r = requests.post(
-        f"{BASE_URL}/login", data=form_data, headers=headers, allow_redirects=True
-    )
-
-    if "Invalid+login+credentials" in r.headers.get("X-Action-Redirect", ""):
-        print("Error: Invalid login credentials", file=sys.stderr)
-        exit(1)
-
-    # Extract auth cookies
-    auth_cookies = [(c.name, c.value) for c in r.cookies if "auth-token" in c.name]
-
-    # r.status_code is `303 See Other` on successful login
-    if r.status_code >= 400 or not auth_cookies:
-        print(f"Login failed: {r.status_code}", file=sys.stderr)
-        print("Response headers:", file=sys.stderr)
-        for k, v in r.headers.items():
-            print(f"{k}: {v}", file=sys.stderr)
-        print("Response cookies:", file=sys.stderr)
-        for cookie in r.cookies:
-            print(f"{cookie.name}: {cookie.value}", file=sys.stderr)
-        print("\nResponse content:", file=sys.stderr)
-        print(r.text, file=sys.stderr)
-        exit(1)
-
-    save_auth(auth_cookies)
-    print("Login successful!", file=sys.stderr)
 
 
 def fetch(resource):
@@ -243,14 +195,6 @@ def parse(lines, resource):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    # Add login command
-    login_group = parser.add_argument_group("Login")
-    login_group.add_argument(
-        "--login",
-        action="store_true",
-        help="Login to 3dfilamentprofiles.com (only used by 'myfilaments')",
-    )
-
     # Add fetch/parse commands
     source_group = parser.add_argument_group("Source")
     resources = ["filaments", "brands", "materials", "dryers", "myfilaments"]
@@ -274,10 +218,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.login:
-        login()
-        exit(0)
-    elif args.fetch:
+    if args.fetch:
         args.resource = args.resource or args.fetch
         data_lines = fetch(args.fetch)
         if args.resource == "raw":
