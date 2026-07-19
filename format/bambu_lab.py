@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional, Union
 from unittest.mock import ANY
 
 import pydantic
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_serializer
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_serializer
 
 bambu_studio_version = "1.10.1.50"
 # https://github.com/bambulab/BambuStudio/tree/98bfabdd/resources/profiles/BBL/filament
@@ -225,6 +225,8 @@ class PriceData(BaseModel):
 
 
 class Properties(BaseModel):
+    model_config = ConfigDict(strict=False, extra="ignore")
+
     adapter_url: Optional[str] = None
     bed_temp_max: Optional[int] = None
     bed_temp_min: Optional[int] = None
@@ -239,6 +241,17 @@ class Properties(BaseModel):
     temp_max: Optional[int] = None
     temp_min: Optional[int] = None
 
+    @field_validator("temp_max", "temp_min", "bed_temp_max", "bed_temp_min",
+                     "fan_speed_max", "fan_speed_min", "spool_count", mode="before")
+    @classmethod
+    def coerce_to_int(cls, v):
+        if v is None:
+            return None
+        try:
+            return int(round(float(v)))
+        except (TypeError, ValueError):
+            return None
+
     @model_serializer(when_used="json")
     def serialize_json(self) -> Dict[str, Any]:
         model = dict(sorted(self.model_dump().items()))
@@ -250,12 +263,13 @@ class Properties(BaseModel):
 
 
 class Filament(BaseModel):
-    ASIN: Optional[str]
+    ASIN: Optional[str] = None
     brand_key: str
     brand_name: str
     color: str
-    created_at: str = Field(
-        validation_alias=AliasChoices("created_at", "filament_created_at")
+    # created_at / updated_at are optional: not present on list-page rows
+    created_at: Optional[str] = Field(
+        None, validation_alias=AliasChoices("created_at", "filament_created_at")
     )
     created_by: Optional[str] = None
     default_properties: Optional[Properties] = Field(None)
@@ -267,21 +281,23 @@ class Filament(BaseModel):
     material_key: str
     material_type: str
     material_type_key: str
+    # price_data: old full format; price: new minimal {href, text, title} format
     price_data: Union[PriceData, str, None] = None
+    price: Optional[Dict[str, Any]] = None
     properties: Properties = Field(default_factory=Properties)
-    rgb: Optional[str]
+    rgb: Optional[str] = None
     short_code: Optional[str] = None
     spool_count: Optional[int] = None
     spool_weight: Union[float, int, None] = None
     td_value: Union[float, int, None] = None
     total_td_votes: Optional[int] = None
-    updated_at: str = Field(
-        validation_alias=AliasChoices("updated_at", "filament_updated_at")
+    updated_at: Optional[str] = Field(
+        None, validation_alias=AliasChoices("updated_at", "filament_updated_at")
     )
     updated_by: Optional[str] = None
     website: Optional[str] = None
 
-    model_config = ConfigDict(strict=True, extra="ignore")
+    model_config = ConfigDict(strict=False, extra="ignore")
 
     def property_val(self, key: str) -> Any:
         if self.properties and getattr(self.properties, key, None) is not None:
@@ -434,6 +450,23 @@ class Filament(BaseModel):
                     ],
                 }
             )
+        # Also check new-format price field: {"href": ..., "text": "$$15.99", "title": ...}
+        if self.price_data is None and isinstance(self.price, dict):
+            text = self.price.get("text", "")
+            # Strip leading $ signs and parse the number
+            price_str = text.lstrip("$").strip()
+            try:
+                price_val = float(price_str)
+                if price_val > 0:
+                    bambu_lab_filament_json.update(
+                        {
+                            "filament_cost": [
+                                f"{price_val:.2f}".rstrip("0").rstrip(".")
+                            ],
+                        }
+                    )
+            except (ValueError, TypeError):
+                pass
         if self.td_value not in (None, 0) and self.total_td_votes not in (None, 0):
             bambu_lab_filament_json.update(
                 {
@@ -639,6 +672,7 @@ if __name__ == "__main__":
                 file=sys.stderr,
             )
             exit(1)
+
         validation_class = Filament
         if my_filaments:
             if filament["id"] not in my_filaments:
@@ -651,17 +685,17 @@ if __name__ == "__main__":
             filename = os.path.join(
                 "filaments",
                 slugify(f.material_key).replace("-", "_"),
-                slugify(f"{f.brand_key}-{f.material_key}-{f.material_type_key}") + "-BBL-filament.json",
+                slugify(f"{f.brand_key}-{f.material_key}-{f.material_type_key}-{f.color}") + "-BBL-filament.json",
             )
             results[filename] = (
                 f.model_dump(mode="json")
                 if args.raw
                 else f.to_bambu_lab_filament_format()
             )
-        except pydantic.ValidationError as e:
-            print(e, file=sys.stderr)
-            print(filament, file=sys.stderr)
-            exit(1)
+        except (pydantic.ValidationError, ValueError) as e:
+            fid = filament.get("id", "?")
+            fname = f"{filament.get('brand_key')}/{filament.get('material_key')}/{filament.get('color')}"
+            print(f"Warning: skipping filament {fid} ({fname}): {e}", file=sys.stderr)
 
     if args.dir is None:
         # sort filename keys
